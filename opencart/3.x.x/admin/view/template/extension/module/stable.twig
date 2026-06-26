@@ -1,0 +1,270 @@
+{{ header }}{{ column_left }}
+<div id="content" class="module-stable">
+	<div class="page-header">
+		<div class="container-fluid">
+			<div class="pull-right">
+				<button type="button" data-toggle="tooltip" title="{{ button_save }}" class="btn btn-primary button-save"><i class="fa fa-save"></i></button>
+				<a href="{{ cancel }}" data-toggle="tooltip" title="{{ button_cancel }}" class="btn btn-default"><i class="fa fa-reply"></i></a>
+			</div>
+			<h1>{{ heading_title }}</h1>
+			<ul class="breadcrumb">
+				{% for breadcrumb in breadcrumbs %}
+				<li><a href="{{ breadcrumb['href'] }}">{{ breadcrumb['text'] }}</a></li>
+				{% endfor %}
+			</ul>
+		</div>
+	</div>
+	<div class="container-fluid">
+		{% if error_warning %}
+		<div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> {{ error_warning }}
+			<button type="button" class="close" data-dismiss="alert">&times;</button>
+		</div>
+		{% endif %}
+		{% if text_version %}
+		<div class="alert alert-info"><i class="fa fa-info-circle"></i> {{ text_version }}</div>
+		{% endif %}
+		<div class="panel panel-default">
+			<div class="panel-heading">
+				<h3 class="panel-title"><i class="fa fa-pencil"></i> {{ text_edit }}</h3>
+			</div>
+			<div class="panel-body">
+				<form action="{{ action }}" method="post" enctype="multipart/form-data" id="form-module">
+					<div class="row">
+						<div class="col col-xs-6 col-md-3 col-lg-2">
+							<div class="form-group">
+								<label class="control-label" for="input_status">{{ entry_status }}</label>
+								<div id="input-status">
+									<input type="hidden" name="module_stable_status" value="0" />
+									<input type="checkbox" name="module_stable_status" value="1" class="switch" {% if status %} checked="checked" {% endif %} />
+								</div>
+							</div>
+						</div>
+						<div class="col col-xs-6 col-md-3 col-lg-2">
+							<div class="form-group">
+								<label class="control-label" for="input-debug-status">{{ entry_debug_status }}</label>
+								<div id="input-debug-status">
+									<input type="hidden" name="module_stable_setting[debug_status]" value="0" />
+									<input type="checkbox" name="module_stable_setting[debug_status]" value="1" class="switch" {% if setting['debug_status'] %} checked="checked" {% endif %} />
+								</div>
+							</div>
+						</div>
+					</div>
+					<ul class="nav nav-tabs">
+						{% for side in setting['side'] %}
+						<li class="nav-tab {% if loop.first %} active {% endif %}"><a href="#tab-{{ side['code'] }}" data-toggle="tab" class="tab"><i class="tab-icon-status tab-icon-status-{% if side['status'] %}on{% else %}off{% endif %}"></i><span class="tab-title">{{ attribute(_context, 'text_side_' ~ side['code']) }}</span></a></li>
+						{% endfor %}
+					</ul>
+					<div class="section-content">
+						<div class="tab-content">
+							{% for side in setting['side'] %}
+							<div class="tab-pane {% if loop.first %} active {% endif %}" id="tab-{{ side['code'] }}">
+								<div class="row flex-row">
+									<div class="col col-md-6">
+										<div class="panel panel-default panel-connection">
+											<div class="panel-heading">
+												<h3 class="panel-title"><i class="fa fa-plug"></i> {{ text_connection }}</h3>
+											</div>
+											<div class="panel-body">
+												<div class="form-group">
+													<label class="control-label" for="input-{{ side['code'] }}-status"><span data-toggle="tooltip" title="{{ attribute(_context, 'help_' ~ side['code'] ~ '_status') }}">{{ attribute(_context, 'entry_' ~ side['code'] ~ '_status') }}</span></label>
+													<div id="input-{{ side['code'] }}-status">
+														<input type="hidden" name="module_stable_setting[side][{{ side['code'] }}][status]" value="0" />
+														<input type="checkbox" name="module_stable_setting[side][{{ side['code'] }}][status]" value="1" class="switch" {% if side['status'] %} checked="checked" {% endif %} />
+													</div>
+												</div>
+												<div class="form-group">
+													<label class="control-label" for="input-{{ side['code'] }}-api-key">{{ entry_api_key }}</label>
+													<input type="text" name="module_stable_setting[side][{{ side['code'] }}][api_key]" value="{{ side['api_key'] }}" placeholder="{{ entry_api_key }}" id="input-{{ side['code'] }}-api-key" class="form-control" />
+												</div>
+												<div class="form-group">
+													<label class="control-label" for="input-{{ side['code'] }}-agent-id">{{ entry_agent_id }}</label>
+													<input type="text" name="module_stable_setting[side][{{ side['code'] }}][agent_id]" value="{{ side['agent_id'] }}" placeholder="{{ entry_agent_id }}" id="input-{{ side['code'] }}-agent-id" class="form-control" />
+												</div>
+											</div>
+										</div>
+									</div>
+									<div class="col col-md-6">
+										<div class="panel panel-default panel-tool-permissions">
+											<div class="panel-heading">
+												<h3 class="panel-title"><i class="fa fa-lock"></i> {{ text_tool_permissions }}</h3>
+											</div>
+											<div class="panel-body">
+												<div class="table-responsive">
+													<table class="table table-bordered table-hover">
+														<thead>
+															<tr>
+																<td class="text-center">{{ column_tool }}</td>
+																<td class="text-center">{{ column_status }}</td>
+															</tr>
+														</thead>
+														<tbody>
+															{% for tool in side['tool'] %}
+															<tr>
+																<td class="text-left">
+																	<div class="tool-name">{{ attribute(_context, 'text_tool_' ~ tool['code']) }}</div>
+																	<div class="tool-help">{{ attribute(_context, 'help_tool_' ~ tool['code']) }}</div>
+																</td>
+																<td class="text-center">
+																	<div id="input-{{ side['code'] }}-tool-{{ tool['code'] }}">
+																		<input type="hidden" name="module_stable_setting[side][{{ side['code'] }}][tool][{{ tool['code'] }}][status]" value="0" />
+																		<input type="checkbox" name="module_stable_setting[side][{{ side['code'] }}][tool][{{ tool['code'] }}][status]" value="1" class="switch" {% if side['tool'][tool['code']]['status'] %} checked="checked" {% endif %} />
+																	</div>
+																</td>
+															</tr>
+															{% endfor %}
+														</tbody>
+													</table>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="row flex-row">
+									<div class="col col-md-6">
+										<div class="panel panel-default panel-tool-analytics">
+											<div class="panel-heading">
+												<h3 class="panel-title"><i class="fa fa-line-chart"></i> {{ text_tool_analytics }}</h3>
+											</div>
+											<div class="panel-body">
+												<div class="table-responsive">
+													<table class="table table-bordered table-hover">
+														<thead>
+															<tr>
+																<td class="text-center">{{ column_tool }}</div></td>
+																{% if side['code'] == 'frontend' %}
+																<td class="text-center">{{ column_uses_customer }}</td>
+																{% else %}
+																<td class="text-center">{{ column_uses_user }}</td>
+																{% endif %}
+																<td class="text-center">{{ column_uses_total }}</td>
+															</tr>
+														</thead>
+														<tbody>
+															{% for tool in side['tool'] %}
+															<tr>
+																<td class="text-left"><div class="tool-name">{{ attribute(_context, 'text_tool_' ~ tool['code']) }}</div></td>
+																<td class="text-center">{{ tool['uses_chat'] }}</td>
+																<td class="text-center">{{ tool['uses_total'] }}</td>
+															</tr>
+															{% endfor %}
+														</tbody>
+													</table>
+												</div>
+											</div>
+										</div>
+									</div>
+									<div class="col col-md-6">
+										<div class="panel panel-default panel-recent-actions">
+											<div class="panel-heading">
+												<h3 class="panel-title"><i class="fa fa-rocket"></i> {{ text_recent_actions }}</h3>
+											</div>
+											<div class="panel-body">
+												<div class="table-responsive">
+													<table class="table table-bordered table-hover">
+														<thead>
+															<tr>
+																{% if side['code'] == 'frontend' %}
+																<td class="text-center">{{ column_customer_id }}</td>
+																{% else %}
+																<td class="text-center">{{ column_user_id }}</td>
+																{% endif %}
+																<td class="text-center">{{ column_tool }}</td>
+																<td class="text-center">{{ column_action_message }}</td>
+																<td class="text-center">{{ column_date_added }}</td>
+															</tr>
+														</thead>
+														<tbody>
+															{% for recent_action in side['recent_action'] %}
+															<tr>
+																{% if side['code'] == 'frontend' %}
+																<td class="text-center"><a href="{{ recent_action['customer_href'] }}" target="_blank">{{ recent_action['customer_id'] }}</a></td>
+																{% else %}
+																<td class="text-center"><a href="{{ recent_action['user_href'] }}" target="_blank">{{ recent_action['user_id'] }}</a></td>
+																{% endif %}
+																{% if recent_action['tool_code'] %}
+																<td class="text-left">{{ attribute(_context, 'text_tool_' ~ recent_action['tool_code']) }}</td>
+																{% else %}
+																<td class="text-left">{{ text_tool_default }}</td>
+																{% endif %}
+																<td class="text-left">{{ recent_action['action_message'] }}</td>
+																<td class="text-center">{{ recent_action['date_added'] }}</td>
+															</tr>
+															{% endfor %}
+														</tbody>
+													</table>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							{% endfor %}
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+
+$('.module-stable .switch').bootstrapSwitch({
+    'onColor': 'success',
+    'onText': '{{ text_on }}',
+    'offText': '{{ text_off }}'
+});
+
+$('#form-module').delegate('.view-password', 'click', function(event) {
+	event.preventDefault();
+	
+	if ($('#' + $(this).attr('field_id')).attr('type') == 'password') {
+		$('#' + $(this).attr('field_id')).attr('type', 'text');
+	} else {
+		$('#' + $(this).attr('field_id')).attr('type', 'password');
+	}
+});
+
+$('.module-stable').on('click', '.button-save', function() {
+    $.ajax({
+		type: 'post',
+		url: $('#form-module').attr('action'),
+		data: $('#form-module').serialize(),
+		dataType: 'json',
+		success: function(json) {
+			$('.module-stable .alert-dismissible, .module-stable .text-danger').remove();
+			$('.module-stable .form-group').removeClass('has-error');
+						
+			if (json['error']) {
+				if (json['error']['warning']) {
+					$('.module-stable > .container-fluid').prepend('<div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> ' + json['error']['warning'] + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+					
+					$('html, body').animate({scrollTop: $('.module-stable > .container-fluid .alert-danger').offset().top}, 'slow');
+				}				
+				
+				for (i in json['error']) {
+					var element = $('#input-' + i.replaceAll('_', '-'));
+
+					if (element.parent().hasClass('input-group')) {
+                   		$(element).parent().after('<div class="text-danger">' + json['error'][i] + '</div>');
+					} else {
+						$(element).after('<div class="text-danger">' + json['error'][i] + '</div>');
+					}
+				}				
+				
+				$('.module-stable .text-danger').parentsUntil('.form-group').parent().addClass('has-error');
+			}
+			
+			if (json['success']) {
+				$('.module-stable > .container-fluid').prepend('<div class="alert alert-success alert-dismissible"><i class="fa fa-check-circle"></i> ' + json['success'] + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+				
+				$('html, body').animate({scrollTop: $('.module-stable > .container-fluid .alert-success').offset().top}, 'slow');
+			}
+		},
+		error: function(xhr, ajaxOptions, thrownError) {
+			console.log(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+		}
+    });  
+});
+
+</script>
+{{ footer }}
