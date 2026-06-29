@@ -12,11 +12,13 @@ $_['text_connection']   						= 'Connection';
 $_['text_tool_permissions']   					= 'Tools Permissions';
 $_['text_tool_analytics']   					= 'Tools Analytics';
 $_['text_recent_actions']   					= 'Recent Actions';
-$_['text_tool_product']   						= 'Product Tools';
-$_['text_tool_cart']   							= 'Shopping Cart Tools';
-$_['text_tool_checkout']   						= 'Checkout Tools';
-$_['text_tool_customer']   						= 'Customer Tools';
-$_['text_tool_order']   						= 'Order Tools';
+$_['text_tool_frontend_product']   				= 'Product Tools';
+$_['text_tool_frontend_customer']   			= 'Customer Tools';
+$_['text_tool_frontend_cart']   				= 'Shopping Cart Tools';
+$_['text_tool_frontend_checkout']   			= 'Checkout Tools';
+$_['text_tool_backend_product']   				= 'Product Tools';
+$_['text_tool_backend_customer']   				= 'Customer Tools';
+$_['text_tool_backend_order']   				= 'Order Tools';
 $_['text_tool_default']   						= 'Default Tools';
 $_['text_action']   							= 'Action';
 $_['text_on']									= 'On';
@@ -44,11 +46,13 @@ $_['entry_agent_id']							= 'Agent ID';
 // Help
 $_['help_frontend_status']						= 'Enable/Disable chat on frontend.';
 $_['help_backend_status']						= 'Enable/Disable chat on backend.';
-$_['help_tool_product']   						= 'Receiving and displaying information about products and categories.';
-$_['help_tool_cart']   							= 'Adding, editing and deleting products from the shopping cart.';
-$_['help_tool_checkout']   						= 'Creating an order.';
-$_['help_tool_customer']   						= 'Receiving and displaying information about customers.';
-$_['help_tool_order']   						= 'Receiving and displaying information about orders.';
+$_['help_tool_frontend_product']   				= 'Receiving and displaying information about products and categories.';
+$_['help_tool_frontend_customer']   			= 'Receiving and displaying information about current customer.';
+$_['help_tool_frontend_cart']   				= 'Adding, editing and deleting products from the shopping cart.';
+$_['help_tool_frontend_checkout']   			= 'Creating an order.';
+$_['help_tool_backend_product']   				= 'Receiving and displaying information about products and categories.';
+$_['help_tool_backend_customer']   				= 'Receiving and displaying information about customers.';
+$_['help_tool_backend_order']   				= 'Receiving and displaying information about orders.';
 
 // Button
 $_['button_save']  								= 'Save';

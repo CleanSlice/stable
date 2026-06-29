@@ -216,7 +216,7 @@ class ControllerExtensionModuleStable extends Controller {
 					$catalog = HTTP_CATALOG;
 				}
 				
-				$mcp_url = $catalog . 'index.php?route=extension/module/stable&side=backend';
+				$mcp_url = $catalog . 'index.php?route=extension/stable/backend';
 		
 				setcookie('stable_chat_id', $chat_id, time() + 60, '/', $this->request->server['HTTP_HOST']);
 				setcookie('stable_agent_id', $setting['side']['backend']['agent_id'], time() + 60, '/', $this->request->server['HTTP_HOST']);

@@ -15,6 +15,10 @@ $_['stable_setting'] = array(
 					'code' => 'product',
 					'status' => true
 				),
+				'customer' => array(
+					'code' => 'customer',
+					'status' => true
+				),
 				'cart' => array(
 					'code' => 'cart',
 					'status' => true

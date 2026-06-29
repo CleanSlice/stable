@@ -101,8 +101,8 @@
 															{% for tool in side['tool'] %}
 															<tr>
 																<td class="text-left">
-																	<div class="tool-name">{{ attribute(_context, 'text_tool_' ~ tool['code']) }}</div>
-																	<div class="tool-help">{{ attribute(_context, 'help_tool_' ~ tool['code']) }}</div>
+																	<div class="tool-name">{{ attribute(_context, 'text_tool_' ~ side['code'] ~ '_' ~ tool['code']) }}</div>
+																	<div class="tool-help">{{ attribute(_context, 'help_tool_' ~ side['code'] ~ '_' ~ tool['code']) }}</div>
 																</td>
 																<td class="text-center">
 																	<div id="input-{{ side['code'] }}-tool-{{ tool['code'] }}">
@@ -142,7 +142,7 @@
 														<tbody>
 															{% for tool in side['tool'] %}
 															<tr>
-																<td class="text-left"><div class="tool-name">{{ attribute(_context, 'text_tool_' ~ tool['code']) }}</div></td>
+																<td class="text-left"><div class="tool-name">{{ attribute(_context, 'text_tool_' ~ side['code'] ~ '_' ~ tool['code']) }}</div></td>
 																<td class="text-center">{{ tool['uses_chat'] }}</td>
 																<td class="text-center">{{ tool['uses_total'] }}</td>
 															</tr>
@@ -182,7 +182,7 @@
 																<td class="text-center"><a href="{{ recent_action['user_href'] }}" target="_blank">{{ recent_action['user_id'] }}</a></td>
 																{% endif %}
 																{% if recent_action['tool_code'] %}
-																<td class="text-left">{{ attribute(_context, 'text_tool_' ~ recent_action['tool_code']) }}</td>
+																<td class="text-left">{{ attribute(_context, 'text_tool_' ~ side['code'] ~ '_' ~ recent_action['tool_code']) }}</td>
 																{% else %}
 																<td class="text-left">{{ text_tool_default }}</td>
 																{% endif %}

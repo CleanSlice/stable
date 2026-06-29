@@ -1,165 +1,185 @@
-# Stable MCP Capabilities Documentation
+# Stable Module Documentation
 
-This file describes all capabilities that the Stable module exposes to the MCP server.
+The Stable module exposes a set of MCP-compatible tools for interacting with an OpenCart store through two controller groups:
 
-## Where the functionality is defined
+- Frontend endpoints for storefront operations
+- Backend endpoints for admin-side catalog, customer, and order data
 
-The `index()` function is located in:
+## Overview
 
-- `catalog/controller/extension/module/stable.php`
+The module is designed to let an external MCP-compatible client query and manipulate store data using JSON-RPC 2.0 responses. Each tool is exposed through a dedicated controller action and returns either a structured result or an error message.
 
-It builds a JSON-RPC response describing the available tools for a selected working side (`frontend` or `backend`).
+The module supports the following high-level areas:
 
-## What the `index()` function does
+- Product and category browsing
+- Customer lookup and profile access
+- Order and order status retrieval
+- Shopping cart management
+- Checkout and payment/shipping information
+- Country and zone lookup
 
-The function performs the following tasks:
+## Common behavior
 
-- loads configuration from `system/config/stable.php`;
-- merges module settings with the current store settings;
-- determines the base URL of the MCP endpoint;
-- collects the list of available tools depending on the enabled capabilities;
-- returns a JSON response with tool metadata and server information.
+All tool endpoints share the same general pattern:
 
-## Response structure
+1. A request arrives with a `chat_id` and relevant parameters.
+2. The controller validates the request method and required input.
+3. The chat is checked for existence and the caller is validated against the configured tool permissions.
+4. The relevant model layer is called to retrieve or modify data.
+5. The result is returned in JSON-RPC format.
 
-The response contains:
+The module also records chat actions and request logs for traceability.
 
-- `jsonrpc`: protocol version, value `2.0`;
-- `result.tools`: list of available MCP tools;
-- `result.serverInfo`: server information (`php-mcp-server`, version `1.0.0`).
+## Backend functionality
 
-## Tool availability
+The backend controller is intended for admin-side operations and exposes tools for catalog, customer, and order management.
 
-The availability of tools depends on the `side` parameter and the module configuration:
-
-- `frontend` — tools for the storefront;
-- `backend` — tools for the admin side.
-
-Each tool group can be enabled or disabled through the module settings.
-
-## Available MCP tools
-
-### 1. Product tools
-
-A group of tools for working with products and categories.
+### Product and category tools
 
 - `getCategory`
-  - Purpose: retrieve information about a product category.
-  - Method: `GET`
-  - Required parameters: `chat_id`, `category_id`
+  - Returns detailed information about a single category.
+  - Requires: `chat_id`, `category_id`
 
 - `getCategories`
-  - Purpose: retrieve a list of categories.
-  - Method: `GET`
-  - Required parameters: `chat_id`
-  - Additional parameter: `parent_id`
+  - Returns a list of categories.
+  - Requires: `chat_id`
+  - Optional: `parent_id`
 
 - `getProduct`
-  - Purpose: retrieve information about a product.
-  - Method: `GET`
-  - Required parameters: `chat_id`, `product_id`
+  - Returns detailed information about a single product.
+  - Requires: `chat_id`, `product_id`
 
 - `getProducts`
-  - Purpose: search for and retrieve a list of products.
-  - Method: `GET`
-  - Required parameters: `chat_id`
-  - Additional parameters: `name`, `model`, `tag`, `description`, `category_id`, `page`
+  - Searches and returns products by name, model, tag, description, category, or page.
+  - Requires: `chat_id`
+  - Optional: `name`, `model`, `tag`, `description`, `category_id`, `page`
 
-### 2. Customer tools
-
-A group of tools for working with customers.
+### Customer tools
 
 - `getCustomer`
-  - Purpose: retrieve information about a customer.
-  - Method: `GET`
-  - Required parameters: `chat_id`, `customer_id`
+  - Returns details for a specific customer.
+  - Requires: `chat_id`, `customer_id`
 
 - `getCustomers`
-  - Purpose: search for and retrieve a list of customers.
-  - Method: `GET`
-  - Required parameters: `chat_id`
-  - Additional parameters: `name`, `email`, `customer_group_id`, `page`
+  - Searches customers using name, email, customer group, or pagination.
+  - Requires: `chat_id`
+  - Optional: `name`, `email`, `customer_group_id`, `page`
 
 - `getCustomerGroups`
-  - Purpose: retrieve a list of customer groups.
-  - Method: `GET`
-  - Required parameters: `chat_id`
+  - Returns the list of available customer groups.
+  - Requires: `chat_id`
 
-### 3. Order tools
-
-A group of tools for working with orders.
+### Order tools
 
 - `getOrder`
-  - Purpose: retrieve information about an order.
-  - Method: `GET`
-  - Required parameters: `chat_id`, `order_id`
+  - Returns details of a single order.
+  - Requires: `chat_id`, `order_id`
 
 - `getOrders`
-  - Purpose: search for and retrieve a list of orders.
-  - Method: `GET`
-  - Required parameters: `chat_id`
-  - Additional parameters: `customer_name`, `order_status_id`, `date_added_from`, `date_added_to`, `page`
+  - Searches orders by customer name, order status, date range, or pagination.
+  - Requires: `chat_id`
+  - Optional: `customer_name`, `order_status_id`, `date_added_from`, `date_added_to`, `page`
 
 - `getOrderStatuses`
-  - Purpose: retrieve a list of order statuses.
-  - Method: `GET`
-  - Required parameters: `chat_id`
+  - Returns the list of order statuses.
+  - Requires: `chat_id`
 
-### 4. Cart tools
-
-A group of tools for working with the cart.
-
-- `addProductInCart`
-  - Purpose: add a product to the cart.
-  - Method: `POST`
-  - Required parameters: `chat_id`, `product_id`
-  - Additional parameters: `quantity`, `option`, `recurring_id`
-
-- `updateProductInCart`
-  - Purpose: update the quantity of a product in the cart.
-  - Method: `PATCH`
-  - Required parameters: `chat_id`, `product_id`, `quantity`
-
-- `deleteProductInCart`
-  - Purpose: remove a product from the cart.
-  - Method: `DELETE`
-  - Required parameters: `chat_id`, `cart_id`
-
-- `getProductsInCart`
-  - Purpose: retrieve the list of products in the cart.
-  - Method: `GET`
-  - Required parameters: `chat_id`, `cart_id`
-
-### 5. Checkout tools
-
-A group of tools for placing orders.
-
-- `createOrder`
-  - Purpose: create an order.
-  - Method: `POST`
-  - Required parameters: `chat_id`, `shipping_method_code`, `payment_method_code`
-  - Additional parameters: first name, last name, email, phone, address, country, region, payment data, and more.
+### Geography tools
 
 - `getCountries`
-  - Purpose: retrieve a list of countries.
-  - Method: `GET`
-  - Required parameters: `chat_id`
+  - Returns available countries.
+  - Requires: `chat_id`
 
 - `getZonesByCountryId`
-  - Purpose: retrieve a list of zones for a country ID.
-  - Method: `GET`
-  - Required parameters: `chat_id`, `country_id`
+  - Returns zones for a specific country.
+  - Requires: `chat_id`, `country_id`
+
+## Frontend functionality
+
+The frontend controller is intended for storefront interactions and exposes tools that support customer-facing shopping scenarios.
+
+### Product and category tools
+
+- `getCategory`
+  - Returns information about a category in the storefront catalog.
+  - Requires: `chat_id`, `category_id`
+
+- `getCategories`
+  - Returns category lists for the storefront.
+  - Requires: `chat_id`
+  - Optional: `parent_id`
+
+- `getProduct`
+  - Returns information about a product from the storefront catalog.
+  - Requires: `chat_id`, `product_id`
+
+- `getProducts`
+  - Searches products in the storefront catalog.
+  - Requires: `chat_id`
+  - Optional: `name`, `model`, `tag`, `description`, `category_id`, `page`
+
+### Customer profile tools
+
+- `getCurrentCustomer`
+  - Returns information about the current customer session.
+  - Requires: `chat_id`
+
+- `getCurrentCustomerOrder`
+  - Returns a specific order belonging to the current customer.
+  - Requires: `chat_id`, `order_id`
+
+- `getCurrentCustomerOrders`
+  - Returns the current customer’s order history.
+  - Requires: `chat_id`
+  - Optional: `page`
+
+### Cart tools
+
+- `addCartProduct`
+  - Adds a product to the customer cart.
+  - Requires: `chat_id`, `product_id`
+  - Optional: `quantity`, `option`, `recurring_id`
+
+- `editCartProduct`
+  - Updates the quantity of a product already in the cart.
+  - Requires: `chat_id`, `cart_id`, `quantity`
+
+- `deleteCartProduct`
+  - Removes a product from the cart.
+  - Requires: `chat_id`, `cart_id`
+
+- `getCartProducts`
+  - Returns the contents of the cart.
+  - Requires: `chat_id`, `cart_id`
+
+### Checkout and delivery tools
+
+- `createOrder`
+  - Creates a new order from the current cart and customer data.
+  - Requires: `chat_id` and checkout-related details such as shipping and payment method codes.
+  - Supports customer address, payment data, and shipping configuration fields.
 
 - `getShippingMethods`
-  - Purpose: retrieve available shipping methods.
-  - Method: `GET`
-  - Required parameters: `chat_id`, `country_id`, `zone_id`
+  - Returns shipping methods available for a given country and zone.
+  - Requires: `chat_id`, `country_id`, `zone_id`
 
 - `getPaymentMethods`
-  - Purpose: retrieve available payment methods.
-  - Method: `GET`
-  - Required parameters: `chat_id`, `country_id`, `zone_id`
+  - Returns payment methods available for a given country and zone.
+  - Requires: `chat_id`, `country_id`, `zone_id`
+  
+### Geography tools
 
-## General note
+- `getCountries`
+  - Returns available countries for checkout and address entry.
+  - Requires: `chat_id`
 
-The `index()` function does not perform the business operations itself; it only describes the available MCP tools and their parameters. The actual request handling is done in other controller methods such as `getProduct`, `createOrder`, `addProductInCart`, and others.
+- `getZonesByCountryId`
+  - Returns zones for a specific country during checkout.
+  - Requires: `chat_id`, `country_id`
+
+## Notes
+
+- The module exposes functionality through tool metadata in the `index()` action and executes the actual logic in dedicated methods such as `getProduct`, `getProducts`, `createOrder`, and cart-related actions.
+- All requests are expected to be made with a valid `chat_id` and the appropriate permissions.
+- The module is suitable for integration with MCP clients that need read and write access to store data in a controlled, structured way.
+
