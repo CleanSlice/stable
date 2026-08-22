@@ -17,7 +17,11 @@ class ModelExtensionModuleStable extends Model {
 		if (!empty($data['session_id'])) {
 			$implode[] = "`session_id` = '" . $this->db->escape($data['session_id']) . "'";
 		}
-											
+		
+		if (!empty($data['date_reset'])) {
+			$implode[] = "`date_reset` = '" . $this->db->escape($data['date_reset']) . "'";
+		}
+													
 		if ($implode) {
 			$sql .= implode(", ", $implode);
 		}
@@ -32,6 +36,10 @@ class ModelExtensionModuleStable extends Model {
 				
 		if (!empty($data['session_id'])) {
 			$implode[] = "`session_id` = '" . $this->db->escape($data['session_id']) . "'";
+		}
+		
+		if (!empty($data['date_reset'])) {
+			$implode[] = "`date_reset` = '" . $this->db->escape($data['date_reset']) . "'";
 		}
 											
 		if ($implode) {
@@ -93,6 +101,33 @@ class ModelExtensionModuleStable extends Model {
 		return $query->rows;
 	}
 	
+	/*
+	*	Return list of stores.
+	*/
+	public function getStores() {
+		$this->load->model('setting/store');
+		
+		$result = array();
+		
+		$result[] = array(
+			'store_id' => 0, 
+			'name' => $this->config->get('config_name')
+		);
+		
+		$stores = $this->model_setting_store->getStores();
+		
+		if ($stores) {
+			foreach ($stores as $store) {
+				$result[] = array(
+					'store_id' => $store['store_id'],
+					'name' => $store['name']	
+				);
+			}	
+		}
+		
+		return $result;
+	}
+	
 	public function checkVersion($opencart_version, $stable_version) {
 		$curl = curl_init();
 			
@@ -144,9 +179,36 @@ class ModelExtensionModuleStable extends Model {
 			return false;
 		}
 	}
+	
+	public function resetRanchChat($api_key, $agent_id, $channel) {
+		$curl = curl_init();
+
+		curl_setopt($curl, CURLOPT_URL, 'https://api.ranch.cleanslice.org/api/agent/' . $agent_id . '/transcript/archive?channel=' . urlencode($channel));
+		curl_setopt($curl, CURLOPT_HEADER, 0);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Accept: application/json', 'Content-Type: application/json', 'Authorization: Bearer ' . $api_key));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, false);
+		curl_setopt($curl, CURLOPT_FORBID_REUSE, 1);
+		curl_setopt($curl, CURLOPT_FRESH_CONNECT, 1);
+		curl_setopt($curl, CURLOPT_POST, 1);
+		curl_setopt($curl, CURLOPT_POSTFIELDS, '');
+
+		$response = curl_exec($curl);
+		
+		curl_close($curl);
+
+		$result = json_decode($response, true);
+		
+		if (!empty($result['success'])) {
+			return true;
+		} else {
+			return false;
+		}
+	}
 			
 	public function install() {
-		$this->db->query("CREATE TABLE IF NOT EXISTS `" . DB_PREFIX . "stable_chat` (`chat_id` VARCHAR(32) NOT NULL, `customer_id` INT(11) NOT NULL, `user_id` INT(11) NOT NULL, `session_id` VARCHAR(32) NOT NULL, PRIMARY KEY (`chat_id`), KEY `session_id` (`session_id`), KEY `customer_id` (`customer_id`), KEY `user_id` (`user_id`)) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci");
+		$this->db->query("CREATE TABLE IF NOT EXISTS `" . DB_PREFIX . "stable_chat` (`chat_id` VARCHAR(32) NOT NULL, `customer_id` INT(11) NOT NULL, `user_id` INT(11) NOT NULL, `session_id` VARCHAR(32) NOT NULL, `date_reset` DATETIME NOT NULL, PRIMARY KEY (`chat_id`), KEY `session_id` (`session_id`), KEY `customer_id` (`customer_id`), KEY `user_id` (`user_id`)) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci");
 		$this->db->query("CREATE TABLE IF NOT EXISTS `" . DB_PREFIX . "stable_chat_action` (`chat_action_id` int(11) NOT NULL AUTO_INCREMENT, `chat_id` VARCHAR(32) NOT NULL, `tool_code` VARCHAR(32) NOT NULL, `action_code` VARCHAR(32) NOT NULL, `action_message` TEXT NOT NULL, `date_added` DATETIME NOT NULL, PRIMARY KEY (`chat_action_id`), KEY `chat_id` (`chat_id`), KEY `tool_code` (`tool_code`), KEY `action_code` (`action_code`)) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci");
 	}
 	

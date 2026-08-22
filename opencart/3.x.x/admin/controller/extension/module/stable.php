@@ -78,6 +78,8 @@ class ControllerExtensionModuleStable extends Controller {
 			}
 		}
 		
+		$data['stores'] = $this->model_extension_module_stable->getStores();
+		
 		$result = $this->model_extension_module_stable->checkVersion(VERSION, $data['setting']['extension']['version']);
 		
 		if (!empty($result['href'])) {
@@ -107,6 +109,10 @@ class ControllerExtensionModuleStable extends Controller {
 						
 		if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validateSave()) {
 			$setting = $this->model_setting_setting->getSetting('module_stable');
+			
+			if (!empty($this->request->post['module_stable_setting']['side']['frontend']['store_id'])) {
+				$setting['module_stable_setting']['side']['frontend']['store_id'] = array();
+			}
 			
 			$setting = array_replace_recursive($setting, $this->request->post);
 						
@@ -174,8 +180,7 @@ class ControllerExtensionModuleStable extends Controller {
 		if ($status && $setting['side']['backend']['status'] && $this->user->isLogged()) {
 			$user_id = $this->user->getId();
 			$session_id = $this->session->getId();
-			$chat_id = 'user-' . $user_id;
-			
+						
 			$this->load->model('user/user');
 			
 			$user_info = $this->model_user_user->getUser($user_id);
@@ -185,26 +190,41 @@ class ControllerExtensionModuleStable extends Controller {
 			$chat_info = $this->model_extension_module_stable->getChatByUserId($user_id);
 						
 			if (empty($chat_info)) {
+				$chat_id = substr(bin2hex(openssl_random_pseudo_bytes(26)), 0, 26); 
+				
 				$chat_data = array(
 					'chat_id' => $chat_id,
 					'session_id' => $session_id,
-					'user_id' => $user_id
+					'user_id' => $user_id,
+					'date_reset' => date('Y-m-d H:i:s')
 				);
 				
 				$this->model_extension_module_stable->addChat($chat_data);
 			} else {
+				$chat_id = $chat_info['chat_id'];
+				$date_reset	= $chat_info['date_reset'];			
+				
+				if (!empty($date_reset) && ((time() - strtotime($chat_info['date_reset'])) >= ($setting['side']['backend']['chat_session_duration'] * 86400))) {
+					$result = $this->model_extension_module_stable->resetRanchChat($setting['side']['backend']['api_key'], $setting['side']['backend']['agent_id'], 'user-' . $user_id);
+
+					if ($result) {
+						$date_reset = date('Y-m-d H:i:s');
+					}
+				}				
+				
 				$chat_data = array(
 					'chat_id' => $chat_id,
-					'session_id' => $session_id
+					'session_id' => $session_id,
+					'date_reset' => $date_reset
 				);
 				
 				$this->model_extension_module_stable->editChat($chat_data);
 			}
 			
 			$ranch_data = array(
-				'sub' => $chat_id,
+				'sub' => 'user-' . $user_id,
 				'email' => $user_info['email'],
-				'expiresIn' => '7d'
+				'expiresIn' => '1d'
 			);
 		
 			$ranch_token = $this->model_extension_module_stable->getRanchToken($setting['side']['backend']['api_key'], $ranch_data);
@@ -216,12 +236,12 @@ class ControllerExtensionModuleStable extends Controller {
 					$catalog = HTTP_CATALOG;
 				}
 				
-				$mcp_url = $catalog . 'index.php?route=extension/stable/backend';
+				$stable_api_url = $catalog . 'index.php?route=extension/stable/backend';
 		
 				setcookie('stable_chat_id', $chat_id, time() + 60, '/', $this->request->server['HTTP_HOST']);
 				setcookie('stable_agent_id', $setting['side']['backend']['agent_id'], time() + 60, '/', $this->request->server['HTTP_HOST']);
 				setcookie('stable_token', $ranch_token, time() + 60, '/', $this->request->server['HTTP_HOST']);
-				setcookie('stable_mcp_url', $mcp_url, time() + 60, '/', $this->request->server['HTTP_HOST']);
+				setcookie('stable_api_url', $stable_api_url, time() + 60, '/', $this->request->server['HTTP_HOST']);
 				
 				$this->document->addScript('view/javascript/stable/stable.js');
 			}

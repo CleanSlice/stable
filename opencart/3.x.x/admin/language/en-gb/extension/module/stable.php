@@ -9,6 +9,7 @@ $_['text_version']								= 'New Stable version available. You can download it <
 $_['text_side_frontend']				 		= 'Frontend';
 $_['text_side_backend']				 			= 'Backend';
 $_['text_connection']   						= 'Connection';
+$_['text_configuration']   						= 'Configuration';
 $_['text_tool_permissions']   					= 'Tools Permissions';
 $_['text_tool_analytics']   					= 'Tools Analytics';
 $_['text_recent_actions']   					= 'Recent Actions';
@@ -42,10 +43,14 @@ $_['entry_frontend_status']						= 'Frontend Status';
 $_['entry_backend_status']						= 'Backend Status';
 $_['entry_api_key']								= 'API Key';
 $_['entry_agent_id']							= 'Agent ID';
+$_['entry_chat_session_duration']				= 'Chat Session Duration (days)';
+$_['entry_store']								= 'Store';
 
 // Help
+$_['help_store']								= 'Set the stores where chat will be available.';
 $_['help_frontend_status']						= 'Enable/Disable chat on frontend.';
 $_['help_backend_status']						= 'Enable/Disable chat on backend.';
+$_['help_chat_session_duration']				= 'Set the the number of days to keep the chat history.';
 $_['help_tool_frontend_product']   				= 'Receiving and displaying information about products and categories.';
 $_['help_tool_frontend_customer']   			= 'Receiving and displaying information about current customer.';
 $_['help_tool_frontend_cart']   				= 'Adding, editing and deleting products from the shopping cart.';

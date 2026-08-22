@@ -106,6 +106,7 @@
 	border-radius: 0px;
 }
 .module-stable .panel-connection,
+.module-stable .panel-configuration,
 .module-stable .panel-tool-permissions,
 .module-stable .panel-tool-analytics,
 .module-stable .panel-recent-actions {
@@ -115,6 +116,7 @@
 	margin-bottom: 0px;
 }
 .module-stable .panel-connection .panel-heading,
+.module-stable .panel-configuration .panel-heading,
 .module-stable .panel-tool-permissions .panel-heading,
 .module-stable .panel-tool-analytics .panel-heading,
 .module-stable .panel-recent-actions .panel-heading {
@@ -122,6 +124,7 @@
 	border-top-right-radius: 5px;
 }
 .module-stable .panel-connection .panel-body,
+.module-stable .panel-configuration .panel-body,
 .module-stable .panel-tool-permissions .panel-body,
 .module-stable .panel-tool-analytics .panel-body,
 .module-stable .panel-recent-actions .panel-body {

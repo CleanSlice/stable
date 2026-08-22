@@ -182,7 +182,6 @@ class ModelExtensionStableFrontend extends Model {
 				'mpn'              => $query->row['mpn'],
 				'location'         => $query->row['location'],
 				'quantity'         => $query->row['quantity'],
-				'stock_status'     => $query->row['stock_status'],
 				'image'            => $image,
 				'manufacturer_id'  => $query->row['manufacturer_id'],
 				'manufacturer'     => $query->row['manufacturer'],

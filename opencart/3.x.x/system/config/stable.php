@@ -7,9 +7,11 @@ $_['stable_setting'] = array(
 	'side' => array(
 		'frontend' => array(
 			'code' => 'frontend',
-			'status' => false,
 			'api_key' => '',
 			'agent_id' => '',
+			'status' => false,
+			'chat_session_duration' => '1',
+			'store_id' => array(),
 			'tool' => array(
 				'product' => array(
 					'code' => 'product',
@@ -31,9 +33,10 @@ $_['stable_setting'] = array(
 		),
 		'backend' => array(
 			'code' => 'backend',
-			'status' => false,
 			'api_key' => '',
 			'agent_id' => '',
+			'status' => false,
+			'chat_session_duration' => '3',
 			'tool' => array(
 				'product' => array(
 					'code' => 'product',
@@ -49,6 +52,7 @@ $_['stable_setting'] = array(
 				)
 			)
 		)
-	)
+	),
+	'chat_session_duration' => array('1', '2', '3', '4', '5', '6', '7')
 );
 ?>

@@ -17,6 +17,10 @@ class ModelExtensionModuleStable extends Model {
 		if (!empty($data['session_id'])) {
 			$implode[] = "`session_id` = '" . $this->db->escape($data['session_id']) . "'";
 		}
+		
+		if (!empty($data['date_reset'])) {
+			$implode[] = "`date_reset` = '" . $this->db->escape($data['date_reset']) . "'";
+		}
 											
 		if ($implode) {
 			$sql .= implode(", ", $implode);
@@ -32,6 +36,10 @@ class ModelExtensionModuleStable extends Model {
 				
 		if (!empty($data['session_id'])) {
 			$implode[] = "`session_id` = '" . $this->db->escape($data['session_id']) . "'";
+		}
+		
+		if (!empty($data['date_reset'])) {
+			$implode[] = "`date_reset` = '" . $this->db->escape($data['date_reset']) . "'";
 		}
 					
 		if ($implode) {
@@ -123,7 +131,34 @@ class ModelExtensionModuleStable extends Model {
 			return false;
 		}
 	}
+	
+	public function resetRanchChat($api_key, $agent_id, $channel) {
+		$curl = curl_init();
+
+		curl_setopt($curl, CURLOPT_URL, 'https://api.ranch.cleanslice.org/api/agent/' . $agent_id . '/transcript/archive?channel=' . urlencode($channel));
+		curl_setopt($curl, CURLOPT_HEADER, 0);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Accept: application/json', 'Content-Type: application/json', 'Authorization: Bearer ' . $api_key));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, false);
+		curl_setopt($curl, CURLOPT_FORBID_REUSE, 1);
+		curl_setopt($curl, CURLOPT_FRESH_CONNECT, 1);
+		curl_setopt($curl, CURLOPT_POST, 1);
+		curl_setopt($curl, CURLOPT_POSTFIELDS, '');
+
+		$response = curl_exec($curl);
 		
+		curl_close($curl);
+
+		$result = json_decode($response, true);
+		
+		if (!empty($result['success'])) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+			
 	public function log($input_data, $output_data, $action_code) {
 		$_config = new Config();
 		$_config->load('stable');

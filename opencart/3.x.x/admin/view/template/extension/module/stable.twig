@@ -66,13 +66,6 @@
 											</div>
 											<div class="panel-body">
 												<div class="form-group">
-													<label class="control-label" for="input-{{ side['code'] }}-status"><span data-toggle="tooltip" title="{{ attribute(_context, 'help_' ~ side['code'] ~ '_status') }}">{{ attribute(_context, 'entry_' ~ side['code'] ~ '_status') }}</span></label>
-													<div id="input-{{ side['code'] }}-status">
-														<input type="hidden" name="module_stable_setting[side][{{ side['code'] }}][status]" value="0" />
-														<input type="checkbox" name="module_stable_setting[side][{{ side['code'] }}][status]" value="1" class="switch" {% if side['status'] %} checked="checked" {% endif %} />
-													</div>
-												</div>
-												<div class="form-group">
 													<label class="control-label" for="input-{{ side['code'] }}-api-key">{{ entry_api_key }}</label>
 													<input type="text" name="module_stable_setting[side][{{ side['code'] }}][api_key]" value="{{ side['api_key'] }}" placeholder="{{ entry_api_key }}" id="input-{{ side['code'] }}-api-key" class="form-control" />
 												</div>
@@ -83,6 +76,51 @@
 											</div>
 										</div>
 									</div>
+									<div class="col col-md-6">
+										<div class="panel panel-default panel-configuration">
+											<div class="panel-heading">
+												<h3 class="panel-title"><i class="fa fa-cog"></i> {{ text_configuration }}</h3>
+											</div>
+											<div class="panel-body">
+												<div class="form-group">
+													<label class="control-label" for="input-{{ side['code'] }}-status"><span data-toggle="tooltip" title="{{ attribute(_context, 'help_' ~ side['code'] ~ '_status') }}">{{ attribute(_context, 'entry_' ~ side['code'] ~ '_status') }}</span></label>
+													<div id="input-{{ side['code'] }}-status">
+														<input type="hidden" name="module_stable_setting[side][{{ side['code'] }}][status]" value="0" />
+														<input type="checkbox" name="module_stable_setting[side][{{ side['code'] }}][status]" value="1" class="switch" {% if side['status'] %} checked="checked" {% endif %} />
+													</div>
+												</div>
+												<div class="form-group">
+													<label class="control-label" for="input-{{ side['code'] }}-chat-session-duration"><span data-toggle="tooltip" title="{{ help_chat_session_duration }}">{{ entry_chat_session_duration }}</span></label>
+													<select name="module_stable_setting[side][{{ side['code'] }}][chat_session_duration]" id="input-{{ side['code'] }}-chat-session-duration" class="form-control">
+														{% for chat_session_duration in setting['chat_session_duration'] %}
+														{% if (chat_session_duration == side['chat_session_duration']) %}
+														<option value="{{ chat_session_duration }}" selected="selected">{{ chat_session_duration }}</option>
+														{% else %}
+														<option value="{{ chat_session_duration }}">{{ chat_session_duration }}</option>
+														{% endif %}
+														{% endfor %}
+													</select>
+												</div>
+												{% if side['code'] == 'frontend' %}
+												<div class="form-group">
+													<label class="control-label" for="input-{{ side['code'] }}-store"><span data-toggle="tooltip" title="{{ help_store }}">{{ entry_store }}</span></label>
+													<div class="well well-sm">
+														{% for store in stores %}
+														<div class="checkbox">
+															<label class="control-label">
+																<input type="checkbox" name="module_stable_setting[side][{{ side['code'] }}][store_id][]" value="{{ store['store_id'] }}" class="form-check-input form-check-input-mini" {% if store['store_id'] in side['store_id'] %} checked="checked" {% endif %} />
+																{{ store['name'] }}
+															</label>
+														</div>
+														{% endfor %}
+													</div>
+												</div>	
+												{% endif %}
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="row flex-row">
 									<div class="col col-md-6">
 										<div class="panel panel-default panel-tool-permissions">
 											<div class="panel-heading">
@@ -118,8 +156,6 @@
 											</div>
 										</div>
 									</div>
-								</div>
-								<div class="row flex-row">
 									<div class="col col-md-6">
 										<div class="panel panel-default panel-tool-analytics">
 											<div class="panel-heading">
@@ -153,7 +189,9 @@
 											</div>
 										</div>
 									</div>
-									<div class="col col-md-6">
+								</div>
+								<div class="row flex-row">
+									<div class="col col-md-12">
 										<div class="panel panel-default panel-recent-actions">
 											<div class="panel-heading">
 												<h3 class="panel-title"><i class="fa fa-rocket"></i> {{ text_recent_actions }}</h3>

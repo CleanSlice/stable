@@ -9,7 +9,7 @@ var StableAPI = (function () {
 	}
 	
 	var loadStableSDK = function() {
-		var info = 'MCP URL: ' + decodeURIComponent(getCookieByName('stable_mcp_url')) + "\r\n" + 'Chat ID: ' + getCookieByName('stable_chat_id');
+		var info = 'Stable API URL: ' + decodeURIComponent(getCookieByName('stable_api_url')) + "\r\n" + 'Chat ID: ' + getCookieByName('stable_chat_id');
 			
 		bridle_script = document.createElement('script');
 		bridle_script.src = 'https://bridle.cleanslice.org/sdk/latest.js';
