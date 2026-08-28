@@ -45,7 +45,12 @@ class ControllerExtensionStableBackend extends Controller {
 				'type' => 'object',
 				'properties' => array(
 					'chat_id' => array('type' => 'string', 'description' => 'Chat ID'),
-					'parent_id' => array('type' => 'number', 'description' => 'Parent Category ID', 'default' => '0')
+					'name' => array('type' => 'string', 'description' => 'Search categories by name'),
+					'parent_category_id' => array('type' => 'number', 'description' => 'Search categories by parent Category ID'),
+					'status' => array('type' => 'number', 'description' => 'Search categories by status (1/0)'),
+					'sort' => array('type' => 'string', 'description' => 'Sort in the category search results (name/status/sort_order)', 'default' => 'sort_order'),
+					'order' => array('type' => 'string', 'description' => 'Order in the category search results (ASC/DESC)', 'default' => 'ASC'),
+					'page' => array('type' => 'number', 'description' => 'Page number in the category search results', 'default' => 1)
 				),
 				'required' => array('chat_id')
 			)
@@ -75,12 +80,19 @@ class ControllerExtensionStableBackend extends Controller {
 				'type' => 'object',
 				'properties' => array(
 					'chat_id' => array('type' => 'string', 'description' => 'Chat ID'),
-					'name' => array('type' => 'string', 'description' => 'Search products by name', 'default' => ''),
-					'model' => array('type' => 'string', 'description' => 'Search products by model', 'default' => ''),
-					'tag' => array('type' => 'string', 'description' => 'Search products by tag', 'default' => ''),
-					'description' => array('type' => 'string', 'description' => 'Search products by description', 'default' => ''),
-					'category_id' => array('type' => 'number', 'description' => 'Search products in the category with this ID', 'default' => '0'),
-					'page' => array('type' => 'number', 'description' => 'Page number in the product search results', 'default' => '1')
+					'name' => array('type' => 'string', 'description' => 'Search products by name'),
+					'model' => array('type' => 'string', 'description' => 'Search products by model'),
+					'price_min' => array('type' => 'number', 'description' => 'Search products with a price greater than this value'),
+					'price_max' => array('type' => 'number', 'description' => 'Search products with a price less than this value'),
+					'quantity_min' => array('type' => 'number', 'description' => 'Search products with a quantity greater than this value'),
+					'quantity_max' => array('type' => 'number', 'description' => 'Search products with a quantity less than this value'),
+					'status' => array('type' => 'number', 'description' => 'Search products by status (1/0)'),
+					'category_id' => array('type' => 'number', 'description' => 'Search products in the category with this ID'),
+					'date_added_from' => array('type' => 'string', 'format' => 'date', 'description' => 'Search products by date added, starting from this date (Format: YYYY-MM-DD)'),
+					'date_added_to' => array('type' => 'string', 'format' => 'date', 'description' => 'Search products by date added, ending with this date (Format: YYYY-MM-DD)'),
+					'sort' => array('type' => 'string', 'description' => 'Sort in the product search results (name/model/price/quantity/status/sort_order/date_added/rating)', 'default' => 'sort_order'),
+					'order' => array('type' => 'string', 'description' => 'Order in the product search results (ASC/DESC)', 'default' => 'ASC'),
+					'page' => array('type' => 'number', 'description' => 'Page number in the product search results', 'default' => 1)
 				),
 				'required' => array('chat_id')
 			)
@@ -110,10 +122,15 @@ class ControllerExtensionStableBackend extends Controller {
 				'type' => 'object',
 				'properties' => array(
 					'chat_id' => array('type' => 'string', 'description' => 'Chat ID'),
-					'name' => array('type' => 'string', 'description' => 'Search customers by name', 'default' => ''),
-					'email' => array('type' => 'string', 'description' => 'Search customers by e-mail', 'default' => ''),
-					'customer_group_id' => array('type' => 'number', 'description' => 'Search customers by customer group ID', 'default' => '0'),
-					'page' => array('type' => 'number', 'description' => 'Page number in the customer search results', 'default' => '1')
+					'name' => array('type' => 'string', 'description' => 'Search customers by name'),
+					'email' => array('type' => 'string', 'description' => 'Search customers by e-mail'),
+					'customer_group_id' => array('type' => 'number', 'description' => 'Search customers by customer group ID'),
+					'status' => array('type' => 'number', 'description' => 'Search customers by status (1/0)'),
+					'date_added_from' => array('type' => 'string', 'format' => 'date', 'description' => 'Search customers by date added, starting from this date (Format: YYYY-MM-DD)'),
+					'date_added_to' => array('type' => 'string', 'format' => 'date', 'description' => 'Search customers by date added, ending with this date (Format: YYYY-MM-DD)'),
+					'sort' => array('type' => 'string', 'description' => 'Sort in the customer search results (name/email/customer_group/status/date_added)', 'default' => 'name'),
+					'order' => array('type' => 'string', 'description' => 'Order in the customer search results (ASC/DESC)', 'default' => 'ASC'),
+					'page' => array('type' => 'number', 'description' => 'Page number in the customer search results', 'default' => 1)
 				),
 				'required' => array('chat_id')
 			)
@@ -142,7 +159,7 @@ class ControllerExtensionStableBackend extends Controller {
 				'type' => 'object',
 				'properties' => array(
 					'chat_id' => array('type' => 'string', 'description' => 'Chat ID'),
-					'customer_id' => array('type' => 'number', 'description' => 'Order ID')
+					'order_id' => array('type' => 'number', 'description' => 'Order ID')
 				),
 				'required' => array('chat_id', 'order_id')
 			)
@@ -157,16 +174,20 @@ class ControllerExtensionStableBackend extends Controller {
 				'type' => 'object',
 				'properties' => array(
 					'chat_id' => array('type' => 'string', 'description' => 'Chat ID'),
-					'customer_name' => array('type' => 'string', 'description' => 'Search orders by customer name', 'default' => ''),
-					'order_status_id' => array('type' => 'number', 'description' => 'Search orders by order status ID', 'default' => ''),
-					'date_added_from' => array('type' => 'string', 'format' => 'date', 'description' => 'Search orders by date added, starting from this date (Format: YYYY-MM-DD)', 'default' => ''),
-					'date_added_to' => array('type' => 'string', 'format' => 'date', 'description' => 'Search orders by date added, ending with this date (Format: YYYY-MM-DD)', 'default' => ''),
-					'page' => array('type' => 'number', 'description' => 'Page number in the order search results', 'default' => '1')
+					'customer_name' => array('type' => 'string', 'description' => 'Search orders by customer name'),
+					'order_status_id' => array('type' => 'number', 'description' => 'Search orders by order status ID'),
+					'total_min' => array('type' => 'number', 'description' => 'Search orders with a total greater than this value'),
+					'total_max' => array('type' => 'number', 'description' => 'Search orders with a total less than this value'),
+					'date_added_from' => array('type' => 'string', 'format' => 'date', 'description' => 'Search orders by date added, starting from this date (Format: YYYY-MM-DD)'),
+					'date_added_to' => array('type' => 'string', 'format' => 'date', 'description' => 'Search orders by date added, ending with this date (Format: YYYY-MM-DD)'),
+					'sort' => array('type' => 'string', 'description' => 'Sort in the order search results (order_id/customer_name/order_status/total/date_added)', 'default' => 'order_id'),
+					'order' => array('type' => 'string', 'description' => 'Order in the order search results (ASC/DESC)', 'default' => 'DESC'),
+					'page' => array('type' => 'number', 'description' => 'Page number in the order search results', 'default' => 1)
 				),
 				'required' => array('chat_id')
 			)
 		);
-		
+
 		$data['result']['tools']['getOrderStatuses'] = array(
 			'name' => 'getOrderStatuses',
 			'description' => 'Get information about order statuses',
@@ -295,18 +316,64 @@ class ControllerExtensionStableBackend extends Controller {
 				if ($this->validateToolPermission('product')) {
 					$this->model_extension_stable_backend->refreshStartup($chat);
 				
-					if (!empty($request['parent_id'])) {
-						$parent_id = $request['parent_id'];
+					if (!empty($request['name'])) {
+						$name = $request['name'];
 					} else {
-						$parent_id = 0;
+						$name = '';
 					}
 					
-					$categories = $this->model_extension_stable_backend->getCategories($parent_id);
+					if (isset($request['status']) && $request['status'] !== '') {
+						$status = $request['status'];
+					} else {
+						$status = '';
+					}
+					
+					if (!empty($request['parent_category_id'])) {
+						$parent_category_id = $request['parent_category_id'];
+					} else {
+						$parent_category_id = 0;
+					}
+					
+					if (!empty($request['sort'])) {
+						$sort = $request['sort'];
+					} else {
+						$sort = 'sort_order';
+					}
+
+					if (!empty($request['order'])) {
+						$order = $request['order'];
+					} else {
+						$order = 'ASC';
+					}
+										
+					if (!empty($request['page'])) {
+						$page = $request['page'];
+					} else {
+						$page = 1;
+					}
+
+					$limit = 20;
+								
+					$filter_data = array(
+						'filter_name'         		=> $name,
+						'filter_parent_category_id' => $parent_category_id,
+						'sort'                		=> $sort,
+						'order'               		=> $order,
+						'start'               		=> ($page - 1) * $limit,
+						'limit'               		=> $limit
+					);
+										
+					$category_total = $this->model_extension_stable_backend->getTotalCategories($filter_data);
+						
+					$categories = $this->model_extension_stable_backend->getCategories($filter_data);
 						
 					$data = array(
 						'jsonrpc' => "2.0",
 						'result' => array(
-							'categories' => $categories
+							'categories' => $categories,
+							'categoryCount' => $category_total,
+							'page' => $page,
+							'pageCount' => ceil($category_total / $limit)
 						)
 					);
 					
@@ -434,23 +501,65 @@ class ControllerExtensionStableBackend extends Controller {
 					} else {
 						$model = '';
 					}
-					
-					if (!empty($request['tag'])) {
-						$tag = $request['tag'];
+										
+					if (isset($request['price_min']) && $request['price_min'] !== '') {
+						$price_min = $request['price_min'];
 					} else {
-						$tag = '';
+						$price_min = '';
 					}
 					
-					if (!empty($request['description'])) {
-						$description = $request['description'];
+					if (isset($request['price_max']) && $request['price_max'] !== '') {
+						$price_max = $request['price_max'];
 					} else {
-						$description = '';
+						$price_max = '';
+					}
+					
+					if (isset($request['quantity_min']) && $request['quantity_min'] !== '') {
+						$quantity_min = $request['quantity_min'];
+					} else {
+						$quantity_min = '';
+					}
+					
+					if (isset($request['quantity_max']) && $request['quantity_max'] !== '') {
+						$quantity_max = $request['quantity_max'];
+					} else {
+						$quantity_max = '';
+					}
+					
+					if (isset($request['status']) && $request['status'] !== '') {
+						$status = $request['status'];
+					} else {
+						$status = '';
 					}
 					
 					if (!empty($request['category_id'])) {
 						$category_id = $request['category_id'];
 					} else {
 						$category_id = 0;
+					}
+					
+					if (!empty($request['date_added_from'])) {
+						$date_added_from = $request['date_added_from'];
+					} else {
+						$date_added_from = '';
+					}
+					
+					if (!empty($request['date_added_to'])) {
+						$date_added_to = $request['date_added_to'];
+					} else {
+						$date_added_to = '';
+					}
+					
+					if (!empty($request['sort'])) {
+						$sort = $request['sort'];
+					} else {
+						$sort = 'sort_order';
+					}
+
+					if (!empty($request['order'])) {
+						$order = $request['order'];
+					} else {
+						$order = 'ASC';
 					}
 										
 					if (!empty($request['page'])) {
@@ -462,13 +571,20 @@ class ControllerExtensionStableBackend extends Controller {
 					$limit = 20;
 								
 					$filter_data = array(
-						'filter_name'         => $name,
-						'filter_model'        => $model,
-						'filter_tag'          => $tag,
-						'filter_description'  => $description,
-						'filter_category_id'  => $category_id,
-						'start'               => ($page - 1) * $limit,
-						'limit'               => $limit
+						'filter_name'         		=> $name,
+						'filter_model'        		=> $model,
+						'filter_price_min'	  	  	=> $price_min,
+						'filter_price_max'	  	  	=> $price_max,
+						'filter_quantity_min'     	=> $quantity_min,
+						'filter_quantity_max'     	=> $quantity_max,
+						'filter_status'       		=> $status,
+						'filter_category_id'  		=> $category_id,
+						'filter_date_added_from'    => $date_added_from,
+						'filter_date_added_to'    	=> $date_added_to,
+						'sort'                		=> $sort,
+						'order'               		=> $order,
+						'start'               		=> ($page - 1) * $limit,
+						'limit'               		=> $limit
 					);
 															
 					$product_total = $this->model_extension_stable_backend->getTotalProducts($filter_data);
@@ -615,6 +731,36 @@ class ControllerExtensionStableBackend extends Controller {
 					} else {
 						$customer_group_id = 0;
 					}
+					
+					if (isset($request['status']) && $request['status'] !== '') {
+						$status = $request['status'];
+					} else {
+						$status = '';
+					}
+					
+					if (!empty($request['date_added_from'])) {
+						$date_added_from = $request['date_added_from'];
+					} else {
+						$date_added_from = '';
+					}
+					
+					if (!empty($request['date_added_to'])) {
+						$date_added_to = $request['date_added_to'];
+					} else {
+						$date_added_to = '';
+					}
+					
+					if (!empty($request['sort'])) {
+						$sort = $request['sort'];
+					} else {
+						$sort = 'name';
+					}
+
+					if (!empty($request['order'])) {
+						$order = $request['order'];
+					} else {
+						$order = 'ASC';
+					}
 										
 					if (!empty($request['page'])) {
 						$page = $request['page'];
@@ -628,6 +774,11 @@ class ControllerExtensionStableBackend extends Controller {
 						'filter_name'         		=> $name,
 						'filter_email'  	  		=> $email,
 						'filter_customer_group_id'  => $customer_group_id,
+						'filter_status'  			=> $status,
+						'filter_date_added_from'    => $date_added_from,
+						'filter_date_added_to'    	=> $date_added_to,
+						'sort'                      => $sort,
+						'order'                     => $order,
 						'start'               		=> ($page - 1) * $limit,
 						'limit'               		=> $limit
 					);
@@ -823,10 +974,22 @@ class ControllerExtensionStableBackend extends Controller {
 						$customer_name = '';
 					}
 															
-					if (!empty($request['order_status_id'])) {
+					if (isset($request['order_status_id']) && $request['order_status_id'] !== '') {
 						$order_status_id = $request['order_status_id'];
 					} else {
 						$order_status_id = '';
+					}
+					
+					if (isset($request['total_min']) && $request['total_min'] !== '') {
+						$total_min = $request['total_min'];
+					} else {
+						$total_min = '';
+					}
+					
+					if (isset($request['total_max']) && $request['total_max'] !== '') {
+						$total_max = $request['total_max'];
+					} else {
+						$total_max = '';
 					}
 					
 					if (!empty($request['date_added_from'])) {
@@ -840,6 +1003,18 @@ class ControllerExtensionStableBackend extends Controller {
 					} else {
 						$date_added_to = '';
 					}
+
+					if (!empty($request['sort'])) {
+						$sort = $request['sort'];
+					} else {
+						$sort = 'order_id';
+					}
+
+					if (!empty($request['order'])) {
+						$order = $request['order'];
+					} else {
+						$order = 'DESC';
+					}
 										
 					if (!empty($request['page'])) {
 						$page = $request['page'];
@@ -852,8 +1027,12 @@ class ControllerExtensionStableBackend extends Controller {
 					$filter_data = array(
 						'filter_customer_name'  	=> $customer_name,
 						'filter_order_status_id'  	=> $order_status_id,
+						'filter_total_min'			=> $total_min,
+						'filter_total_max'			=> $total_max,
 						'filter_date_added_from'    => $date_added_from,
 						'filter_date_added_to'    	=> $date_added_to,
+						'sort'                      => $sort,
+						'order'                     => $order,
 						'start'               		=> ($page - 1) * $limit,
 						'limit'               		=> $limit
 					);

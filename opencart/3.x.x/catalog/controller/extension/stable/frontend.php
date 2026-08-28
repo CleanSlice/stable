@@ -45,7 +45,11 @@ class ControllerExtensionStableFrontend extends Controller {
 				'type' => 'object',
 				'properties' => array(
 					'chat_id' => array('type' => 'string', 'description' => 'Chat ID'),
-					'parent_id' => array('type' => 'number', 'description' => 'Parent Category ID', 'default' => '0')
+					'name' => array('type' => 'string', 'description' => 'Search categories by name'),
+					'parent_category_id' => array('type' => 'number', 'description' => 'Search categories by parent Category ID'),
+					'sort' => array('type' => 'string', 'description' => 'Sort in the category search results (name/sort_order)', 'default' => 'sort_order'),
+					'order' => array('type' => 'string', 'description' => 'Order in the category search results (ASC/DESC)', 'default' => 'ASC'),
+					'page' => array('type' => 'number', 'description' => 'Page number in the category search results', 'default' => 1)
 				),
 				'required' => array('chat_id')
 			)
@@ -75,12 +79,18 @@ class ControllerExtensionStableFrontend extends Controller {
 				'type' => 'object',
 				'properties' => array(
 					'chat_id' => array('type' => 'string', 'description' => 'Chat ID'),
-					'name' => array('type' => 'string', 'description' => 'Search products by name', 'default' => ''),
-					'model' => array('type' => 'string', 'description' => 'Search products by model', 'default' => ''),
-					'tag' => array('type' => 'string', 'description' => 'Search products by tag', 'default' => ''),
-					'description' => array('type' => 'string', 'description' => 'Search products by description', 'default' => ''),
-					'category_id' => array('type' => 'number', 'description' => 'Search products in the category with this ID', 'default' => '0'),
-					'page' => array('type' => 'number', 'description' => 'Page number in the product search results', 'default' => '1')
+					'name' => array('type' => 'string', 'description' => 'Search products by name'),
+					'model' => array('type' => 'string', 'description' => 'Search products by model'),
+					'price_min' => array('type' => 'number', 'description' => 'Search products priced at or above this value. Give it in the same terms the customer sees in the results: tax included, in the current currency. Numbers only, no currency symbol.'),
+					'price_max' => array('type' => 'number', 'description' => 'Search products priced at or below this value. Give it in the same terms the customer sees in the results: tax included, in the current currency. Numbers only, no currency symbol.'),
+					'quantity_min' => array('type' => 'number', 'description' => 'Search products with a quantity greater than this value'),
+					'quantity_max' => array('type' => 'number', 'description' => 'Search products with a quantity less than this value'),
+					'category_id' => array('type' => 'number', 'description' => 'Search products in the category with this ID'),
+					'date_added_from' => array('type' => 'string', 'format' => 'date', 'description' => 'Search products by date added, starting from this date (Format: YYYY-MM-DD)'),
+					'date_added_to' => array('type' => 'string', 'format' => 'date', 'description' => 'Search products by date added, ending with this date (Format: YYYY-MM-DD)'),
+					'sort' => array('type' => 'string', 'description' => 'Sort in the product search results (name/model/price/quantity/sort_order/date_added/rating)', 'default' => 'sort_order'),
+					'order' => array('type' => 'string', 'description' => 'Order in the product search results (ASC/DESC)', 'default' => 'ASC'),
+					'page' => array('type' => 'number', 'description' => 'Page number in the product search results', 'default' => 1)
 				),
 				'required' => array('chat_id')
 			)
@@ -124,7 +134,7 @@ class ControllerExtensionStableFrontend extends Controller {
 				'type' => 'object',
 				'properties' => array(
 					'chat_id' => array('type' => 'string', 'description' => 'Chat ID'),
-					'page' => array('type' => 'number', 'description' => 'Page number in the customer order search results', 'default' => '1')
+					'page' => array('type' => 'number', 'description' => 'Page number in the customer order search results', 'default' => 1)
 				),
 				'required' => array('chat_id')
 			)
@@ -140,7 +150,7 @@ class ControllerExtensionStableFrontend extends Controller {
 				'properties' => array(
 					'chat_id' => array('type' => 'string', 'description' => 'Chat ID'),
 					'product_id' => array('type' => 'number', 'description' => 'Product ID'),
-					'quantity' => array('type' => 'number', 'description' => 'Quantity', 'default' => '1'),
+					'quantity' => array('type' => 'number', 'description' => 'Quantity', 'default' => 1),
 					'option' => array(
 						'type' => 'object', 
 						'description' => 'Product options where KEY is product_option_id (stringified number) and VALUE is product_option_value_id (number) or text value.',
@@ -149,7 +159,7 @@ class ControllerExtensionStableFrontend extends Controller {
 							'description' => 'The value of the product option (product_option_value_id, text, or array of IDs for checkboxes)'
 						)
 					),						
-					'recurring_id' => array('type' => 'number', 'description' => 'Recurring ID', 'default' => '0'),
+					'recurring_id' => array('type' => 'number', 'description' => 'Recurring ID', 'default' => 0),
 				),
 				'required' => array('chat_id', 'product_id')
 			)
@@ -391,18 +401,58 @@ class ControllerExtensionStableFrontend extends Controller {
 				if ($this->validateToolPermission('product')) {
 					$this->model_extension_stable_frontend->refreshStartup($chat);
 				
-					if (!empty($request['parent_id'])) {
-						$parent_id = $request['parent_id'];
+					if (!empty($request['name'])) {
+						$name = $request['name'];
 					} else {
-						$parent_id = 0;
+						$name = '';
 					}
 					
-					$categories = $this->model_extension_stable_frontend->getCategories($parent_id);
+					if (!empty($request['parent_category_id'])) {
+						$parent_category_id = $request['parent_category_id'];
+					} else {
+						$parent_category_id = 0;
+					}
+					
+					if (!empty($request['sort'])) {
+						$sort = $request['sort'];
+					} else {
+						$sort = 'sort_order';
+					}
+
+					if (!empty($request['order'])) {
+						$order = $request['order'];
+					} else {
+						$order = 'ASC';
+					}
+										
+					if (!empty($request['page'])) {
+						$page = $request['page'];
+					} else {
+						$page = 1;
+					}
+
+					$limit = 20;
+								
+					$filter_data = array(
+						'filter_name'         		=> $name,
+						'filter_parent_category_id' => $parent_category_id,
+						'sort'                		=> $sort,
+						'order'               		=> $order,
+						'start'               		=> ($page - 1) * $limit,
+						'limit'               		=> $limit
+					);
+										
+					$category_total = $this->model_extension_stable_backend->getTotalCategories($filter_data);
+						
+					$categories = $this->model_extension_stable_backend->getCategories($filter_data);
 						
 					$data = array(
 						'jsonrpc' => "2.0",
 						'result' => array(
-							'categories' => $categories
+							'categories' => $categories,
+							'categoryCount' => $category_total,
+							'page' => $page,
+							'pageCount' => ceil($category_total / $limit)
 						)
 					);
 					
@@ -518,7 +568,7 @@ class ControllerExtensionStableFrontend extends Controller {
 			if ($chat) {
 				if ($this->validateToolPermission('product')) {
 					$this->model_extension_stable_frontend->refreshStartup($chat);
-
+					
 					if (!empty($request['name'])) {
 						$name = $request['name'];
 					} else {
@@ -531,22 +581,58 @@ class ControllerExtensionStableFrontend extends Controller {
 						$model = '';
 					}
 					
-					if (!empty($request['tag'])) {
-						$tag = $request['tag'];
+					if (isset($request['price_min']) && $request['price_min'] !== '') {
+						$price_min = $request['price_min'];
 					} else {
-						$tag = '';
+						$price_min = '';
+					}
+
+					if (isset($request['price_max']) && $request['price_max'] !== '') {
+						$price_max = $request['price_max'];
+					} else {
+						$price_max = '';
+					}
+															
+					if (isset($request['quantity_min']) && $request['quantity_min'] !== '') {
+						$quantity_min = $request['quantity_min'];
+					} else {
+						$quantity_min = '';
 					}
 					
-					if (!empty($request['description'])) {
-						$description = $request['description'];
+					if (isset($request['quantity_max']) && $request['quantity_max'] !== '') {
+						$quantity_max = $request['quantity_max'];
 					} else {
-						$description = '';
+						$quantity_max = '';
 					}
 					
 					if (!empty($request['category_id'])) {
 						$category_id = $request['category_id'];
 					} else {
 						$category_id = 0;
+					}
+					
+					if (!empty($request['date_added_from'])) {
+						$date_added_from = $request['date_added_from'];
+					} else {
+						$date_added_from = '';
+					}
+					
+					if (!empty($request['date_added_to'])) {
+						$date_added_to = $request['date_added_to'];
+					} else {
+						$date_added_to = '';
+					}
+
+					if (!empty($request['sort'])) {
+						$sort = $request['sort'];
+					} else {
+						$sort = 'sort_order';
+					}
+
+					if (!empty($request['order'])) {
+						$order = $request['order'];
+					} else {
+						$order = 'ASC';
 					}
 										
 					if (!empty($request['page'])) {
@@ -558,13 +644,19 @@ class ControllerExtensionStableFrontend extends Controller {
 					$limit = 20;
 								
 					$filter_data = array(
-						'filter_name'         => $name,
-						'filter_model'        => $model,
-						'filter_tag'          => $tag,
-						'filter_description'  => $description,
-						'filter_category_id'  => $category_id,
-						'start'               => ($page - 1) * $limit,
-						'limit'               => $limit
+						'filter_name'         		=> $name,
+						'filter_model'        		=> $model,
+						'filter_price_min'	  	  	=> $price_min,
+						'filter_price_max'	  	  	=> $price_max,
+						'filter_quantity_min'     	=> $quantity_min,
+						'filter_quantity_max'     	=> $quantity_max,
+						'filter_category_id'  		=> $category_id,
+						'filter_date_added_from'    => $date_added_from,
+						'filter_date_added_to'    	=> $date_added_to,
+						'sort'                		=> $sort,
+						'order'               		=> $order,
+						'start'               		=> ($page - 1) * $limit,
+						'limit'               		=> $limit
 					);
 															
 					$product_total = $this->model_extension_stable_frontend->getTotalProducts($filter_data);
