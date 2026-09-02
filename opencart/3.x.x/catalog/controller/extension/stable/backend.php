@@ -56,6 +56,39 @@ class ControllerExtensionStableBackend extends Controller {
 			)
 		);
 		
+		$data['result']['tools']['getManufacturer'] = array(
+			'name' => 'getManufacturer',
+			'description' => 'Get information about the product manufacturer',
+			'endpoint' => $this->url->link('extension/stable/backend/getManufacturer', '', true),
+			'requestMethod' => 'POST',
+			'inputSchema' => array(
+				'type' => 'object',
+				'properties' => array(
+					'chat_id' => array('type' => 'string', 'description' => 'Chat ID'),
+					'manufacturer_id' => array('type' => 'number', 'description' => 'Manufacturer ID')
+				),
+				'required' => array('chat_id', 'manufacturer_id')
+			)
+		);
+		
+		$data['result']['tools']['getManufacturers'] = array(
+			'name' => 'getManufacturers',
+			'description' => 'Get information about product manufacturers',
+			'endpoint' => $this->url->link('extension/stable/backend/getManufacturers', '', true),
+			'requestMethod' => 'POST',
+			'inputSchema' => array(
+				'type' => 'object',
+				'properties' => array(
+					'chat_id' => array('type' => 'string', 'description' => 'Chat ID'),
+					'name' => array('type' => 'string', 'description' => 'Search manufacturers by name'),
+					'sort' => array('type' => 'string', 'description' => 'Sort in the manufacturer search results (name/sort_order)', 'default' => 'name'),
+					'order' => array('type' => 'string', 'description' => 'Order in the manufacturer search results (ASC/DESC)', 'default' => 'ASC'),
+					'page' => array('type' => 'number', 'description' => 'Page number in the manufacturer search results', 'default' => 1)
+				),
+				'required' => array('chat_id')
+			)
+		);
+		
 		$data['result']['tools']['getProduct'] = array(
 			'name' => 'getProduct',
 			'description' => 'Get information about the product',
@@ -87,10 +120,11 @@ class ControllerExtensionStableBackend extends Controller {
 					'quantity_min' => array('type' => 'number', 'description' => 'Search products with a quantity greater than this value'),
 					'quantity_max' => array('type' => 'number', 'description' => 'Search products with a quantity less than this value'),
 					'status' => array('type' => 'number', 'description' => 'Search products by status (1/0)'),
+					'manufacturer_id' => array('type' => 'number', 'description' => 'Search products with this manufacturer ID'),
 					'category_id' => array('type' => 'number', 'description' => 'Search products in the category with this ID'),
 					'date_added_from' => array('type' => 'string', 'format' => 'date', 'description' => 'Search products by date added, starting from this date (Format: YYYY-MM-DD)'),
 					'date_added_to' => array('type' => 'string', 'format' => 'date', 'description' => 'Search products by date added, ending with this date (Format: YYYY-MM-DD)'),
-					'sort' => array('type' => 'string', 'description' => 'Sort in the product search results (name/model/price/quantity/status/sort_order/date_added/rating)', 'default' => 'sort_order'),
+					'sort' => array('type' => 'string', 'description' => 'Sort in the product search results (name/model/price/quantity/status/sort_order/date_added/manufacturer/rating)', 'default' => 'sort_order'),
 					'order' => array('type' => 'string', 'description' => 'Order in the product search results (ASC/DESC)', 'default' => 'ASC'),
 					'page' => array('type' => 'number', 'description' => 'Page number in the product search results', 'default' => 1)
 				),
@@ -409,6 +443,167 @@ class ControllerExtensionStableBackend extends Controller {
 		$this->response->setOutput(json_encode($data));	
 	}
 	
+	public function getManufacturer() {
+		$this->load->model('extension/module/stable');
+		$this->load->model('extension/stable/backend');
+		
+		$request = $this->getRequestData();
+		
+		if (empty($request['chat_id'])) {
+			$this->errors[] = 'Chat ID required!';
+		}
+			
+		if (empty($request['manufacturer_id'])) {
+			$this->errors[] = 'Manufacturer ID required!';
+		}
+					
+		if (!$this->errors) {
+			$chat = $this->model_extension_module_stable->getChat($request['chat_id']);
+			
+			if ($chat) {
+				if ($this->validateToolPermission('product')) {
+					$this->model_extension_stable_backend->refreshStartup($chat);
+								
+					$manufacturer = $this->model_extension_stable_backend->getManufacturer($request['manufacturer_id']);
+				
+					if ($manufacturer) {
+						$data = array(
+							'jsonrpc' => "2.0",
+							'result' => $manufacturer
+						);
+						
+						$chat_action_data = array(
+							'chat_id' => $chat['chat_id'],
+							'tool_code' => 'product',
+							'action_code' => 'getManufacturer',
+							'action_message' => sprintf('Get information about a product manufacturer with ID %s.', $manufacturer['manufacturer_id'])
+						);
+						
+						$this->model_extension_module_stable->addChatAction($chat_action_data);
+					} else {
+						$this->errors[] = 'Manufacturer not found!';
+					}
+				} else {
+					$this->errors[] = 'You do not have permission to use this tool!';
+				}
+			} else {
+				$this->errors[] = 'Chat not found!';
+			}
+		}
+				
+		if ($this->errors) {
+			$data = array(
+				'jsonrpc' => "2.0",
+				'error' => implode(' ', $this->errors),
+				'errors' => $this->errors
+			);
+			
+			$this->response->addHeader($this->request->server['SERVER_PROTOCOL'] . ' 400 Bad Request');
+		}
+		
+		$this->model_extension_module_stable->log($request, $data, 'getManufacturer');
+		
+		$this->response->addHeader('Content-Type: application/json');
+		$this->response->setOutput(json_encode($data));	
+	}
+	
+	public function getManufacturers() {
+		$this->load->model('extension/module/stable');
+		$this->load->model('extension/stable/backend');
+		
+		$request = $this->getRequestData();
+		
+		if (empty($request['chat_id'])) {
+			$this->errors[] = 'Chat ID required!';
+		}
+									
+		if (!$this->errors)	{			
+			$chat = $this->model_extension_module_stable->getChat($request['chat_id']);
+			
+			if ($chat) {
+				if ($this->validateToolPermission('product')) {
+					$this->model_extension_stable_backend->refreshStartup($chat);
+				
+					if (!empty($request['name'])) {
+						$name = $request['name'];
+					} else {
+						$name = '';
+					}
+										
+					if (!empty($request['sort'])) {
+						$sort = $request['sort'];
+					} else {
+						$sort = 'sort_order';
+					}
+
+					if (!empty($request['order'])) {
+						$order = $request['order'];
+					} else {
+						$order = 'ASC';
+					}
+										
+					if (!empty($request['page'])) {
+						$page = $request['page'];
+					} else {
+						$page = 1;
+					}
+
+					$limit = 20;
+								
+					$filter_data = array(
+						'filter_name'         		=> $name,
+						'sort'                		=> $sort,
+						'order'               		=> $order,
+						'start'               		=> ($page - 1) * $limit,
+						'limit'               		=> $limit
+					);
+										
+					$manufacturer_total = $this->model_extension_stable_backend->getTotalManufacturers($filter_data);
+						
+					$manufacturers = $this->model_extension_stable_backend->getManufacturers($filter_data);
+						
+					$data = array(
+						'jsonrpc' => "2.0",
+						'result' => array(
+							'manufacturers' => $manufacturers,
+							'manufacturerCount' => $manufacturer_total,
+							'page' => $page,
+							'pageCount' => ceil($manufacturer_total / $limit)
+						)
+					);
+					
+					$chat_action_data = array(
+						'chat_id' => $chat['chat_id'],
+						'tool_code' => 'product',
+						'action_code' => 'getManufacturers',
+						'action_message' => 'Get information about product manufacturers.'
+					);
+					
+					$this->model_extension_module_stable->addChatAction($chat_action_data);
+				} else {
+					$this->errors[] = 'You do not have permission to use this tool!';
+				}
+			} else {
+				$this->errors[] = 'Chat not found!';
+			}
+		}
+				
+		if ($this->errors) {
+			$data = array(
+				'jsonrpc' => "2.0",
+				'error' => implode(' ', $this->errors),
+				'errors' => $this->errors
+			);
+			
+			$this->response->addHeader($this->request->server['SERVER_PROTOCOL'] . ' 400 Bad Request');
+		}
+		
+		$this->model_extension_module_stable->log($request, $data, 'getManufacturers');
+		
+		$this->response->addHeader('Content-Type: application/json');
+		$this->response->setOutput(json_encode($data));	
+	}
+	
 	public function getProduct() {
 		$this->load->model('extension/module/stable');
 		$this->load->model('extension/stable/backend');
@@ -501,7 +696,7 @@ class ControllerExtensionStableBackend extends Controller {
 					} else {
 						$model = '';
 					}
-										
+															
 					if (isset($request['price_min']) && $request['price_min'] !== '') {
 						$price_min = $request['price_min'];
 					} else {
@@ -530,6 +725,12 @@ class ControllerExtensionStableBackend extends Controller {
 						$status = $request['status'];
 					} else {
 						$status = '';
+					}
+					
+					if (!empty($request['manufacturer_id'])) {
+						$manufacturer_id = $request['manufacturer_id'];
+					} else {
+						$manufacturer_id = 0;
 					}
 					
 					if (!empty($request['category_id'])) {
@@ -578,6 +779,7 @@ class ControllerExtensionStableBackend extends Controller {
 						'filter_quantity_min'     	=> $quantity_min,
 						'filter_quantity_max'     	=> $quantity_max,
 						'filter_status'       		=> $status,
+						'filter_manufacturer_id'  	=> $manufacturer_id,
 						'filter_category_id'  		=> $category_id,
 						'filter_date_added_from'    => $date_added_from,
 						'filter_date_added_to'    	=> $date_added_to,

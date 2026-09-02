@@ -55,6 +55,39 @@ class ControllerExtensionStableFrontend extends Controller {
 			)
 		);
 		
+		$data['result']['tools']['getManufacturer'] = array(
+			'name' => 'getManufacturer',
+			'description' => 'Get information about the product manufacturer',
+			'endpoint' => $this->url->link('extension/stable/frontend/getManufacturer', '', true),
+			'requestMethod' => 'POST',
+			'inputSchema' => array(
+				'type' => 'object',
+				'properties' => array(
+					'chat_id' => array('type' => 'string', 'description' => 'Chat ID'),
+					'manufacturer_id' => array('type' => 'number', 'description' => 'Manufacturer ID')
+				),
+				'required' => array('chat_id', 'manufacturer_id')
+			)
+		);
+		
+		$data['result']['tools']['getManufacturers'] = array(
+			'name' => 'getManufacturers',
+			'description' => 'Get information about product manufacturers',
+			'endpoint' => $this->url->link('extension/stable/frontend/getManufacturers', '', true),
+			'requestMethod' => 'POST',
+			'inputSchema' => array(
+				'type' => 'object',
+				'properties' => array(
+					'chat_id' => array('type' => 'string', 'description' => 'Chat ID'),
+					'name' => array('type' => 'string', 'description' => 'Search manufacturers by name'),
+					'sort' => array('type' => 'string', 'description' => 'Sort in the manufacturer search results (name/sort_order)', 'default' => 'name'),
+					'order' => array('type' => 'string', 'description' => 'Order in the manufacturer search results (ASC/DESC)', 'default' => 'ASC'),
+					'page' => array('type' => 'number', 'description' => 'Page number in the manufacturer search results', 'default' => 1)
+				),
+				'required' => array('chat_id')
+			)
+		);
+		
 		$data['result']['tools']['getProduct'] = array(
 			'name' => 'getProduct',
 			'description' => 'Get information about the product',
@@ -85,10 +118,11 @@ class ControllerExtensionStableFrontend extends Controller {
 					'price_max' => array('type' => 'number', 'description' => 'Search products priced at or below this value. Give it in the same terms the customer sees in the results: tax included, in the current currency. Numbers only, no currency symbol.'),
 					'quantity_min' => array('type' => 'number', 'description' => 'Search products with a quantity greater than this value'),
 					'quantity_max' => array('type' => 'number', 'description' => 'Search products with a quantity less than this value'),
+					'manufacturer_id' => array('type' => 'number', 'description' => 'Search products with this manufacturer ID'),
 					'category_id' => array('type' => 'number', 'description' => 'Search products in the category with this ID'),
 					'date_added_from' => array('type' => 'string', 'format' => 'date', 'description' => 'Search products by date added, starting from this date (Format: YYYY-MM-DD)'),
 					'date_added_to' => array('type' => 'string', 'format' => 'date', 'description' => 'Search products by date added, ending with this date (Format: YYYY-MM-DD)'),
-					'sort' => array('type' => 'string', 'description' => 'Sort in the product search results (name/model/price/quantity/sort_order/date_added/rating)', 'default' => 'sort_order'),
+					'sort' => array('type' => 'string', 'description' => 'Sort in the product search results (name/model/price/quantity/sort_order/date_added/manufacturer/rating)', 'default' => 'sort_order'),
 					'order' => array('type' => 'string', 'description' => 'Order in the product search results (ASC/DESC)', 'default' => 'ASC'),
 					'page' => array('type' => 'number', 'description' => 'Page number in the product search results', 'default' => 1)
 				),
@@ -209,7 +243,7 @@ class ControllerExtensionStableFrontend extends Controller {
 				'required' => array('chat_id')
 			)
 		);
-				
+						
 		$data['result']['tools']['createOrder'] = array(
 			'name' => 'createOrder',
 			'description' => 'Create Order',
@@ -231,29 +265,45 @@ class ControllerExtensionStableFrontend extends Controller {
 					'country_id' => array('type' => 'number', 'description' => 'Country ID'),
 					'zone_id' => array('type' => 'number', 'description' => 'Zone ID'),
 					'shipping_method_code' => array('type' => 'string', 'description' => 'Shipping Method Code, exactly as returned by getShippingMethods. Required whenever the cart contains a shippable product; omit only for digital-only carts.'),
-					'payment_method_code' => array('type' => 'string', 'description' => 'Payment Method Code, exactly as returned by getPaymentMethods. If this is "authorizenet_aim", the cc_* fields below are all required.'),
-					'cc_owner' => array('type' => 'string', 'description' => 'Card Owner. Required only when payment_method_code is "authorizenet_aim".'),
-					'cc_number' => array('type' => 'string', 'description' => 'Card Number, digits only. Required only when payment_method_code is "authorizenet_aim".'),
-					'cc_expire_date_month' => array('type' => 'string', 'description' => 'Card Expiry Month, 2 digits ("01".."12"). Required only when payment_method_code is "authorizenet_aim".'),
-					'cc_expire_date_year' => array('type' => 'string', 'description' => 'Card Expiry Year, 4 digits ("2029"). Required only when payment_method_code is "authorizenet_aim".'),
-					'cc_cvv2' => array('type' => 'string', 'description' => 'Card Security Code (CVV2), 3-4 digits. Required only when payment_method_code is "authorizenet_aim".')
+					'payment_method_code' => array('type' => 'string', 'description' => 'Payment Method Code, exactly as returned by getPaymentMethods. Some methods need extra fields — getPaymentMethods lists them in required_fields, and they become required for this call.')
 				),
 				'required' => array('chat_id', 'payment_method_code'),
-				'allOf' => array(
-					array(
-						'if' => array(
-							'properties' => array(
-								'payment_method_code' => array('const' => 'authorizenet_aim')
-							),
-							'required' => array('payment_method_code')
-						),
-						'then' => array(
-							'required' => array('cc_owner', 'cc_number', 'cc_expire_date_month', 'cc_expire_date_year', 'cc_cvv2')
-						)
-					)
-				)
+				'allOf' => array()
 			)
 		);
+		
+		foreach ($setting['payment_method'] as $payment_method) {
+			if (empty($payment_method['field'])) {
+				continue;
+			}
+	
+			$required_fields = array();
+				
+			foreach ($payment_method['field'] as $field) {
+				$data['result']['tools']['createOrder']['inputSchema']['properties'][$field['code']] = array(
+					'type' => $field['type'], 
+					'description' => $field['description']
+				);
+					
+				if (!empty($field['required'])) {
+					$required_fields[] = $field['code'];
+				}
+			}
+				
+			if ($required_fields) {
+				$data['result']['tools']['createOrder']['inputSchema']['allOf'][] = array(
+					'if' => array(
+						'properties' => array(
+							'payment_method_code' => array('const' => $payment_method['code'])
+						),
+						'required' => array('payment_method_code')
+					),
+					'then' => array(
+						'required' => $required_fields
+					)
+				);
+			}
+		}
 								
 		$data['result']['tools']['getShippingMethods'] = array(
 			'name' => 'getShippingMethods',
@@ -488,6 +538,167 @@ class ControllerExtensionStableFrontend extends Controller {
 		$this->response->setOutput(json_encode($data));	
 	}
 	
+	public function getManufacturer() {
+		$this->load->model('extension/module/stable');
+		$this->load->model('extension/stable/backend');
+		
+		$request = $this->getRequestData();
+		
+		if (empty($request['chat_id'])) {
+			$this->errors[] = 'Chat ID required!';
+		}
+			
+		if (empty($request['manufacturer_id'])) {
+			$this->errors[] = 'Manufacturer ID required!';
+		}
+					
+		if (!$this->errors) {
+			$chat = $this->model_extension_module_stable->getChat($request['chat_id']);
+			
+			if ($chat) {
+				if ($this->validateToolPermission('product')) {
+					$this->model_extension_stable_frontend->refreshStartup($chat);
+								
+					$manufacturer = $this->model_extension_stable_frontend->getManufacturer($request['manufacturer_id']);
+				
+					if ($manufacturer) {
+						$data = array(
+							'jsonrpc' => "2.0",
+							'result' => $manufacturer
+						);
+						
+						$chat_action_data = array(
+							'chat_id' => $chat['chat_id'],
+							'tool_code' => 'product',
+							'action_code' => 'getManufacturer',
+							'action_message' => sprintf('Get information about a product manufacturer with ID %s.', $manufacturer['manufacturer_id'])
+						);
+						
+						$this->model_extension_module_stable->addChatAction($chat_action_data);
+					} else {
+						$this->errors[] = 'Manufacturer not found!';
+					}
+				} else {
+					$this->errors[] = 'You do not have permission to use this tool!';
+				}
+			} else {
+				$this->errors[] = 'Chat not found!';
+			}
+		}
+				
+		if ($this->errors) {
+			$data = array(
+				'jsonrpc' => "2.0",
+				'error' => implode(' ', $this->errors),
+				'errors' => $this->errors
+			);
+			
+			$this->response->addHeader($this->request->server['SERVER_PROTOCOL'] . ' 400 Bad Request');
+		}
+		
+		$this->model_extension_module_stable->log($request, $data, 'getManufacturer');
+		
+		$this->response->addHeader('Content-Type: application/json');
+		$this->response->setOutput(json_encode($data));	
+	}
+	
+	public function getManufacturers() {
+		$this->load->model('extension/module/stable');
+		$this->load->model('extension/stable/backend');
+		
+		$request = $this->getRequestData();
+		
+		if (empty($request['chat_id'])) {
+			$this->errors[] = 'Chat ID required!';
+		}
+									
+		if (!$this->errors)	{			
+			$chat = $this->model_extension_module_stable->getChat($request['chat_id']);
+			
+			if ($chat) {
+				if ($this->validateToolPermission('product')) {
+					$this->model_extension_stable_backend->refreshStartup($chat);
+				
+					if (!empty($request['name'])) {
+						$name = $request['name'];
+					} else {
+						$name = '';
+					}
+										
+					if (!empty($request['sort'])) {
+						$sort = $request['sort'];
+					} else {
+						$sort = 'sort_order';
+					}
+
+					if (!empty($request['order'])) {
+						$order = $request['order'];
+					} else {
+						$order = 'ASC';
+					}
+										
+					if (!empty($request['page'])) {
+						$page = $request['page'];
+					} else {
+						$page = 1;
+					}
+
+					$limit = 20;
+								
+					$filter_data = array(
+						'filter_name'         		=> $name,
+						'sort'                		=> $sort,
+						'order'               		=> $order,
+						'start'               		=> ($page - 1) * $limit,
+						'limit'               		=> $limit
+					);
+										
+					$manufacturer_total = $this->model_extension_stable_frontend->getTotalManufacturers($filter_data);
+						
+					$manufacturers = $this->model_extension_stable_frontend->getManufacturers($filter_data);
+						
+					$data = array(
+						'jsonrpc' => "2.0",
+						'result' => array(
+							'manufacturers' => $manufacturers,
+							'manufacturerCount' => $manufacturer_total,
+							'page' => $page,
+							'pageCount' => ceil($manufacturer_total / $limit)
+						)
+					);
+					
+					$chat_action_data = array(
+						'chat_id' => $chat['chat_id'],
+						'tool_code' => 'product',
+						'action_code' => 'getManufacturers',
+						'action_message' => 'Get information about product manufacturers.'
+					);
+					
+					$this->model_extension_module_stable->addChatAction($chat_action_data);
+				} else {
+					$this->errors[] = 'You do not have permission to use this tool!';
+				}
+			} else {
+				$this->errors[] = 'Chat not found!';
+			}
+		}
+				
+		if ($this->errors) {
+			$data = array(
+				'jsonrpc' => "2.0",
+				'error' => implode(' ', $this->errors),
+				'errors' => $this->errors
+			);
+			
+			$this->response->addHeader($this->request->server['SERVER_PROTOCOL'] . ' 400 Bad Request');
+		}
+		
+		$this->model_extension_module_stable->log($request, $data, 'getManufacturers');
+		
+		$this->response->addHeader('Content-Type: application/json');
+		$this->response->setOutput(json_encode($data));	
+	}
+	
 	public function getProduct() {
 		$this->load->model('extension/module/stable');
 		$this->load->model('extension/stable/frontend');
@@ -580,7 +791,7 @@ class ControllerExtensionStableFrontend extends Controller {
 					} else {
 						$model = '';
 					}
-					
+										
 					if (isset($request['price_min']) && $request['price_min'] !== '') {
 						$price_min = $request['price_min'];
 					} else {
@@ -603,6 +814,12 @@ class ControllerExtensionStableFrontend extends Controller {
 						$quantity_max = $request['quantity_max'];
 					} else {
 						$quantity_max = '';
+					}
+					
+					if (!empty($request['manufacturer_id'])) {
+						$manufacturer_id = $request['manufacturer_id'];
+					} else {
+						$manufacturer_id = 0;
 					}
 					
 					if (!empty($request['category_id'])) {
@@ -650,6 +867,7 @@ class ControllerExtensionStableFrontend extends Controller {
 						'filter_price_max'	  	  	=> $price_max,
 						'filter_quantity_min'     	=> $quantity_min,
 						'filter_quantity_max'     	=> $quantity_max,
+						'filter_manufacturer_id'  	=> $manufacturer_id,
 						'filter_category_id'  		=> $category_id,
 						'filter_date_added_from'    => $date_added_from,
 						'filter_date_added_to'    	=> $date_added_to,
@@ -1220,6 +1438,13 @@ class ControllerExtensionStableFrontend extends Controller {
 			
 			if ($chat) {
 				if ($this->validateToolPermission('checkout')) {
+					$_config = new Config();
+					$_config->load('stable');
+					
+					$config_setting = $_config->get('stable_setting');
+					
+					$setting = array_replace_recursive((array)$config_setting, (array)$this->config->get('module_stable_setting'));
+					
 					$this->model_extension_stable_frontend->refreshStartup($chat);
 					
 					if ($this->customer->isLogged()) {
@@ -1396,25 +1621,11 @@ class ControllerExtensionStableFrontend extends Controller {
 						}
 					}
 					
-					if ($this->request->post['payment_method_code'] == 'authorizenet_aim') {
-						if (empty($this->request->post['cc_owner'])) {
-							$this->errors[] = 'Card Owner required for this payment method!';
-						}
-						
-						if (empty($this->request->post['cc_number'])) {
-							$this->errors[] = 'Card Number required for this payment method!';
-						}
-						
-						if (empty($this->request->post['cc_expire_date_month'])) {
-							$this->errors[] = 'Card Expiry Date Month required for this payment method!';
-						}
-						
-						if (empty($this->request->post['cc_expire_date_year'])) {
-							$this->errors[] = 'Card Expiry Date Year required for this payment method!';
-						}
-						
-						if (empty($this->request->post['cc_cvv2'])) {
-							$this->errors[] = 'Card Security Code (CVV2) required for this payment method!';
+					if (!empty($setting['payment_method'][$this->request->post['payment_method_code']]['field'])) {
+						foreach ($setting['payment_method'][$this->request->post['payment_method_code']]['field'] as $field) {
+							if (!empty($field['required']) && empty($this->request->post[$field['code']])) {
+								$this->errors[] = sprintf('%s required for this payment method!', $field['name']);
+							}
 						}
 					}
 				} else {
@@ -1615,308 +1826,308 @@ class ControllerExtensionStableFrontend extends Controller {
 				if (empty($this->session->data['payment_method']) && $this->session->data['payment_methods']) {
 					$this->session->data['payment_method'] = reset($this->session->data['payment_methods']);
 				}
-			
-				$order_data = array();
-
-				$totals = array();
-				$taxes = $this->cart->getTaxes();
-				$total = 0;
-
-				$total_data = array(
-					'totals' => &$totals,
-					'taxes'  => &$taxes,
-					'total'  => &$total
-				);
-
-				$this->load->model('setting/extension');
-
-				$sort_order = array();
-
-				$results = $this->model_setting_extension->getExtensions('total');
-
-				foreach ($results as $key => $value) {
-					$sort_order[$key] = $this->config->get('total_' . $value['code'] . '_sort_order');
-				}
-
-				array_multisort($sort_order, SORT_ASC, $results);
-
-				foreach ($results as $result) {
-					if ($this->config->get('total_' . $result['code'] . '_status')) {
-						$this->load->model('extension/total/' . $result['code']);
-
-						$this->{'model_extension_total_' . $result['code']}->getTotal($total_data);
-					}
-				}
-
-				$sort_order = array();
-
-				foreach ($totals as $key => $value) {
-					$sort_order[$key] = $value['sort_order'];
-				}
-
-				array_multisort($sort_order, SORT_ASC, $totals);
-
-				$order_data['totals'] = $totals;
-
-				$this->load->language('checkout/checkout');
-
-				$order_data['invoice_prefix'] = $this->config->get('config_invoice_prefix');
-				$order_data['store_id'] = $this->config->get('config_store_id');
-				$order_data['store_name'] = $this->config->get('config_name');
-
-				if ($order_data['store_id']) {
-					$order_data['store_url'] = $this->config->get('config_url');
-				} else {
-					if ($this->request->server['HTTPS']) {
-						$order_data['store_url'] = HTTPS_SERVER;
-					} else {
-						$order_data['store_url'] = HTTP_SERVER;
-					}
-				}
-												
-				$order_data['customer_id'] = $this->session->data['guest']['customer_id'];
-				$order_data['customer_group_id'] = $this->session->data['guest']['customer_group_id'];
-				$order_data['firstname'] = $this->session->data['guest']['firstname'];
-				$order_data['lastname'] = $this->session->data['guest']['lastname'];
-				$order_data['email'] = $this->session->data['guest']['email'];
-				$order_data['telephone'] = $this->session->data['guest']['telephone'];
-				$order_data['custom_field'] = $this->session->data['guest']['custom_field'];
 				
-				$order_data['payment_firstname'] = $this->session->data['payment_address']['firstname'];
-				$order_data['payment_lastname'] = $this->session->data['payment_address']['lastname'];
-				$order_data['payment_company'] = $this->session->data['payment_address']['company'];
-				$order_data['payment_address_1'] = $this->session->data['payment_address']['address_1'];
-				$order_data['payment_address_2'] = $this->session->data['payment_address']['address_2'];
-				$order_data['payment_city'] = $this->session->data['payment_address']['city'];
-				$order_data['payment_postcode'] = $this->session->data['payment_address']['postcode'];
-				$order_data['payment_zone'] = $this->session->data['payment_address']['zone'];
-				$order_data['payment_zone_id'] = $this->session->data['payment_address']['zone_id'];
-				$order_data['payment_country'] = $this->session->data['payment_address']['country'];
-				$order_data['payment_country_id'] = $this->session->data['payment_address']['country_id'];
-				$order_data['payment_address_format'] = $this->session->data['payment_address']['address_format'];
-				$order_data['payment_custom_field'] = (isset($this->session->data['payment_address']['custom_field']) ? $this->session->data['payment_address']['custom_field'] : array());
-							
-				if (!empty($this->session->data['payment_method']['title'])) {
-					$order_data['payment_method'] = $this->session->data['payment_method']['title'];
-				} else {
-					$order_data['payment_method'] = '';
-				}
+				if (!empty($this->session->data['payment_method']['code']) && !empty($setting['payment_method'][$this->session->data['payment_method']['code']])) {
+					$stable_payment_method = $setting['payment_method'][$this->session->data['payment_method']['code']];
+					
+					$order_data = array();
 
-				if (!empty($this->session->data['payment_method']['code'])) {
-					$order_data['payment_code'] = $this->session->data['payment_method']['code'];
-				} else {
-					$order_data['payment_code'] = '';
-				}
-				
-				if ($this->cart->hasShipping()) {
-					$order_data['shipping_firstname'] = $this->session->data['shipping_address']['firstname'];
-					$order_data['shipping_lastname'] = $this->session->data['shipping_address']['lastname'];
-					$order_data['shipping_company'] = $this->session->data['shipping_address']['company'];
-					$order_data['shipping_address_1'] = $this->session->data['shipping_address']['address_1'];
-					$order_data['shipping_address_2'] = $this->session->data['shipping_address']['address_2'];
-					$order_data['shipping_city'] = $this->session->data['shipping_address']['city'];
-					$order_data['shipping_postcode'] = $this->session->data['shipping_address']['postcode'];
-					$order_data['shipping_zone'] = $this->session->data['shipping_address']['zone'];
-					$order_data['shipping_zone_id'] = $this->session->data['shipping_address']['zone_id'];
-					$order_data['shipping_country'] = $this->session->data['shipping_address']['country'];
-					$order_data['shipping_country_id'] = $this->session->data['shipping_address']['country_id'];
-					$order_data['shipping_address_format'] = $this->session->data['shipping_address']['address_format'];
-					$order_data['shipping_custom_field'] = (isset($this->session->data['shipping_address']['custom_field']) ? $this->session->data['shipping_address']['custom_field'] : array());
-																											
-					if (!empty($this->session->data['shipping_method']['title'])) {
-						$order_data['shipping_method'] = $this->session->data['shipping_method']['title'];
+					$totals = array();
+					$taxes = $this->cart->getTaxes();
+					$total = 0;
+
+					$total_data = array(
+						'totals' => &$totals,
+						'taxes'  => &$taxes,
+						'total'  => &$total
+					);
+
+					$this->load->model('setting/extension');
+
+					$sort_order = array();
+
+					$results = $this->model_setting_extension->getExtensions('total');
+
+					foreach ($results as $key => $value) {
+						$sort_order[$key] = $this->config->get('total_' . $value['code'] . '_sort_order');
+					}
+
+					array_multisort($sort_order, SORT_ASC, $results);
+
+					foreach ($results as $result) {
+						if ($this->config->get('total_' . $result['code'] . '_status')) {
+							$this->load->model('extension/total/' . $result['code']);
+
+							$this->{'model_extension_total_' . $result['code']}->getTotal($total_data);
+						}
+					}
+
+					$sort_order = array();
+
+					foreach ($totals as $key => $value) {
+						$sort_order[$key] = $value['sort_order'];
+					}
+
+					array_multisort($sort_order, SORT_ASC, $totals);
+
+					$order_data['totals'] = $totals;
+
+					$this->load->language('checkout/checkout');
+
+					$order_data['invoice_prefix'] = $this->config->get('config_invoice_prefix');
+					$order_data['store_id'] = $this->config->get('config_store_id');
+					$order_data['store_name'] = $this->config->get('config_name');
+
+					if ($order_data['store_id']) {
+						$order_data['store_url'] = $this->config->get('config_url');
 					} else {
+						if ($this->request->server['HTTPS']) {
+							$order_data['store_url'] = HTTPS_SERVER;
+						} else {
+							$order_data['store_url'] = HTTP_SERVER;
+						}
+					}
+													
+					$order_data['customer_id'] = $this->session->data['guest']['customer_id'];
+					$order_data['customer_group_id'] = $this->session->data['guest']['customer_group_id'];
+					$order_data['firstname'] = $this->session->data['guest']['firstname'];
+					$order_data['lastname'] = $this->session->data['guest']['lastname'];
+					$order_data['email'] = $this->session->data['guest']['email'];
+					$order_data['telephone'] = $this->session->data['guest']['telephone'];
+					$order_data['custom_field'] = $this->session->data['guest']['custom_field'];
+					
+					$order_data['payment_firstname'] = $this->session->data['payment_address']['firstname'];
+					$order_data['payment_lastname'] = $this->session->data['payment_address']['lastname'];
+					$order_data['payment_company'] = $this->session->data['payment_address']['company'];
+					$order_data['payment_address_1'] = $this->session->data['payment_address']['address_1'];
+					$order_data['payment_address_2'] = $this->session->data['payment_address']['address_2'];
+					$order_data['payment_city'] = $this->session->data['payment_address']['city'];
+					$order_data['payment_postcode'] = $this->session->data['payment_address']['postcode'];
+					$order_data['payment_zone'] = $this->session->data['payment_address']['zone'];
+					$order_data['payment_zone_id'] = $this->session->data['payment_address']['zone_id'];
+					$order_data['payment_country'] = $this->session->data['payment_address']['country'];
+					$order_data['payment_country_id'] = $this->session->data['payment_address']['country_id'];
+					$order_data['payment_address_format'] = $this->session->data['payment_address']['address_format'];
+					$order_data['payment_custom_field'] = (isset($this->session->data['payment_address']['custom_field']) ? $this->session->data['payment_address']['custom_field'] : array());
+								
+					if (!empty($this->session->data['payment_method']['title'])) {
+						$order_data['payment_method'] = $this->session->data['payment_method']['title'];
+					} else {
+						$order_data['payment_method'] = '';
+					}
+
+					if (!empty($this->session->data['payment_method']['code'])) {
+						$order_data['payment_code'] = $this->session->data['payment_method']['code'];
+					} else {
+						$order_data['payment_code'] = '';
+					}
+					
+					if ($this->cart->hasShipping()) {
+						$order_data['shipping_firstname'] = $this->session->data['shipping_address']['firstname'];
+						$order_data['shipping_lastname'] = $this->session->data['shipping_address']['lastname'];
+						$order_data['shipping_company'] = $this->session->data['shipping_address']['company'];
+						$order_data['shipping_address_1'] = $this->session->data['shipping_address']['address_1'];
+						$order_data['shipping_address_2'] = $this->session->data['shipping_address']['address_2'];
+						$order_data['shipping_city'] = $this->session->data['shipping_address']['city'];
+						$order_data['shipping_postcode'] = $this->session->data['shipping_address']['postcode'];
+						$order_data['shipping_zone'] = $this->session->data['shipping_address']['zone'];
+						$order_data['shipping_zone_id'] = $this->session->data['shipping_address']['zone_id'];
+						$order_data['shipping_country'] = $this->session->data['shipping_address']['country'];
+						$order_data['shipping_country_id'] = $this->session->data['shipping_address']['country_id'];
+						$order_data['shipping_address_format'] = $this->session->data['shipping_address']['address_format'];
+						$order_data['shipping_custom_field'] = (isset($this->session->data['shipping_address']['custom_field']) ? $this->session->data['shipping_address']['custom_field'] : array());
+																												
+						if (!empty($this->session->data['shipping_method']['title'])) {
+							$order_data['shipping_method'] = $this->session->data['shipping_method']['title'];
+						} else {
+							$order_data['shipping_method'] = '';
+						}
+
+						if (!empty($this->session->data['shipping_method']['code'])) {
+							$order_data['shipping_code'] = $this->session->data['shipping_method']['code'];
+						} else {
+							$order_data['shipping_code'] = '';
+						}
+					} else {
+						$order_data['shipping_firstname'] = '';
+						$order_data['shipping_lastname'] = '';
+						$order_data['shipping_company'] = '';
+						$order_data['shipping_address_1'] = '';
+						$order_data['shipping_address_2'] = '';
+						$order_data['shipping_city'] = '';
+						$order_data['shipping_postcode'] = '';
+						$order_data['shipping_zone'] = '';
+						$order_data['shipping_zone_id'] = '';
+						$order_data['shipping_country'] = '';
+						$order_data['shipping_country_id'] = '';
+						$order_data['shipping_address_format'] = '';
+						$order_data['shipping_custom_field'] = array();
 						$order_data['shipping_method'] = '';
-					}
-
-					if (!empty($this->session->data['shipping_method']['code'])) {
-						$order_data['shipping_code'] = $this->session->data['shipping_method']['code'];
-					} else {
 						$order_data['shipping_code'] = '';
 					}
-				} else {
-					$order_data['shipping_firstname'] = '';
-					$order_data['shipping_lastname'] = '';
-					$order_data['shipping_company'] = '';
-					$order_data['shipping_address_1'] = '';
-					$order_data['shipping_address_2'] = '';
-					$order_data['shipping_city'] = '';
-					$order_data['shipping_postcode'] = '';
-					$order_data['shipping_zone'] = '';
-					$order_data['shipping_zone_id'] = '';
-					$order_data['shipping_country'] = '';
-					$order_data['shipping_country_id'] = '';
-					$order_data['shipping_address_format'] = '';
-					$order_data['shipping_custom_field'] = array();
-					$order_data['shipping_method'] = '';
-					$order_data['shipping_code'] = '';
-				}
 
-				$order_data['products'] = array();
+					$order_data['products'] = array();
 
-				foreach ($this->cart->getProducts() as $product) {
-					$option_data = array();
+					foreach ($this->cart->getProducts() as $product) {
+						$option_data = array();
 
-					foreach ($product['option'] as $option) {
-						$option_data[] = array(
-							'product_option_id'       => $option['product_option_id'],
-							'product_option_value_id' => $option['product_option_value_id'],
-							'option_id'               => $option['option_id'],
-							'option_value_id'         => $option['option_value_id'],
-							'name'                    => $option['name'],
-							'value'                   => $option['value'],
-							'type'                    => $option['type']
+						foreach ($product['option'] as $option) {
+							$option_data[] = array(
+								'product_option_id'       => $option['product_option_id'],
+								'product_option_value_id' => $option['product_option_value_id'],
+								'option_id'               => $option['option_id'],
+								'option_value_id'         => $option['option_value_id'],
+								'name'                    => $option['name'],
+								'value'                   => $option['value'],
+								'type'                    => $option['type']
+							);
+						}
+
+						$order_data['products'][] = array(
+							'product_id' 		=> $product['product_id'],
+							'name'       		=> $product['name'],
+							'model'      		=> $product['model'],
+							'option'     		=> $option_data,
+							'download'   		=> $product['download'],
+							'quantity'   		=> $product['quantity'],
+							'subtract'   		=> $product['subtract'],
+							'price'      		=> $product['price'],
+							'total'      		=> $product['total'],
+							'tax'        		=> $this->tax->getTax($product['price'], $product['tax_class_id']),
+							'reward'     		=> $product['reward']
 						);
 					}
 
-					$order_data['products'][] = array(
-						'product_id' 		=> $product['product_id'],
-						'name'       		=> $product['name'],
-						'model'      		=> $product['model'],
-						'option'     		=> $option_data,
-						'download'   		=> $product['download'],
-						'quantity'   		=> $product['quantity'],
-						'subtract'   		=> $product['subtract'],
-						'price'      		=> $product['price'],
-						'total'      		=> $product['total'],
-						'tax'        		=> $this->tax->getTax($product['price'], $product['tax_class_id']),
-						'reward'     		=> $product['reward']
-					);
-				}
+					$order_data['vouchers'] = array();
 
-				$order_data['vouchers'] = array();
-
-				if (!empty($this->session->data['vouchers'])) {
-					foreach ($this->session->data['vouchers'] as $voucher) {
-						$order_data['vouchers'][] = array(
-							'description'      => $voucher['description'],
-							'code'             => token(10),
-							'to_name'          => $voucher['to_name'],
-							'to_email'         => $voucher['to_email'],
-							'from_name'        => $voucher['from_name'],
-							'from_email'       => $voucher['from_email'],
-							'voucher_theme_id' => $voucher['voucher_theme_id'],
-							'message'          => $voucher['message'],
-							'amount'           => $voucher['amount']
-						);
+					if (!empty($this->session->data['vouchers'])) {
+						foreach ($this->session->data['vouchers'] as $voucher) {
+							$order_data['vouchers'][] = array(
+								'description'      => $voucher['description'],
+								'code'             => token(10),
+								'to_name'          => $voucher['to_name'],
+								'to_email'         => $voucher['to_email'],
+								'from_name'        => $voucher['from_name'],
+								'from_email'       => $voucher['from_email'],
+								'voucher_theme_id' => $voucher['voucher_theme_id'],
+								'message'          => $voucher['message'],
+								'amount'           => $voucher['amount']
+							);
+						}
 					}
-				}
-		
-				$order_data['comment'] = '';
-				$order_data['total'] = $total_data['total'];
+			
+					$order_data['comment'] = '';
+					$order_data['total'] = $total_data['total'];
 
-				if (isset($this->request->cookie['tracking'])) {
-					$order_data['tracking'] = $this->request->cookie['tracking'];
+					if (isset($this->request->cookie['tracking'])) {
+						$order_data['tracking'] = $this->request->cookie['tracking'];
 
-					$subtotal = $this->cart->getSubTotal();
-					
-					$this->load->model('account/customer');
+						$subtotal = $this->cart->getSubTotal();
+						
+						$this->load->model('account/customer');
 
-					$affiliate_info = $this->model_account_customer->getAffiliateByTracking($this->request->cookie['tracking']);
+						$affiliate_info = $this->model_account_customer->getAffiliateByTracking($this->request->cookie['tracking']);
 
-					if ($affiliate_info) {
-						$order_data['affiliate_id'] = $affiliate_info['customer_id'];
-						$order_data['commission'] = ($subtotal / 100) * $affiliate_info['commission'];
+						if ($affiliate_info) {
+							$order_data['affiliate_id'] = $affiliate_info['customer_id'];
+							$order_data['commission'] = ($subtotal / 100) * $affiliate_info['commission'];
+						} else {
+							$order_data['affiliate_id'] = 0;
+							$order_data['commission'] = 0;
+						}
+
+						$this->load->model('checkout/marketing');
+
+						$marketing_info = $this->model_checkout_marketing->getMarketingByCode($this->request->cookie['tracking']);
+
+						if ($marketing_info) {
+							$order_data['marketing_id'] = $marketing_info['marketing_id'];
+						} else {
+							$order_data['marketing_id'] = 0;
+						}
 					} else {
 						$order_data['affiliate_id'] = 0;
 						$order_data['commission'] = 0;
-					}
-
-					$this->load->model('checkout/marketing');
-
-					$marketing_info = $this->model_checkout_marketing->getMarketingByCode($this->request->cookie['tracking']);
-
-					if ($marketing_info) {
-						$order_data['marketing_id'] = $marketing_info['marketing_id'];
-					} else {
 						$order_data['marketing_id'] = 0;
+						$order_data['tracking'] = '';
 					}
-				} else {
-					$order_data['affiliate_id'] = 0;
-					$order_data['commission'] = 0;
-					$order_data['marketing_id'] = 0;
-					$order_data['tracking'] = '';
-				}
-				
-				$order_data['language_id'] = $this->config->get('config_language_id');
-				$order_data['currency_id'] = $this->currency->getId($this->session->data['currency']);
-				$order_data['currency_code'] = $this->session->data['currency'];
-				$order_data['currency_value'] = $this->currency->getValue($this->session->data['currency']);
-				$order_data['ip'] = $this->request->server['REMOTE_ADDR'];
-
-				if (!empty($this->request->server['HTTP_X_FORWARDED_FOR'])) {
-					$order_data['forwarded_ip'] = $this->request->server['HTTP_X_FORWARDED_FOR'];
-				} elseif (!empty($this->request->server['HTTP_CLIENT_IP'])) {
-					$order_data['forwarded_ip'] = $this->request->server['HTTP_CLIENT_IP'];
-				} else {
-					$order_data['forwarded_ip'] = '';
-				}
-
-				if (isset($this->request->server['HTTP_USER_AGENT'])) {
-					$order_data['user_agent'] = $this->request->server['HTTP_USER_AGENT'];
-				} else {
-					$order_data['user_agent'] = '';
-				}
-
-				if (isset($this->request->server['HTTP_ACCEPT_LANGUAGE'])) {
-					$order_data['accept_language'] = $this->request->server['HTTP_ACCEPT_LANGUAGE'];
-				} else {
-					$order_data['accept_language'] = '';
-				}
-				
-				$this->load->model('checkout/order');
-
-				$this->session->data['order_id'] = $this->model_checkout_order->addOrder($order_data);
-								
-				if ($this->request->post['payment_method_code'] == 'authorizenet_aim') {
-					$this->load->controller('extension/payment/' . $this->session->data['payment_method']['code'] . '/send');
-				} else {
-					$this->load->controller('extension/payment/' . $this->session->data['payment_method']['code'] . '/confirm');
-				}
-			
-				$output = $this->response->getOutput();
-				
-				$json = json_decode($output, true);
-				
-				if (!empty($json['redirect'])) {
-					$order = $this->model_extension_stable_frontend->getOrder($this->session->data['order_id']);
 					
-					if ($order) {							
-						$data = array(
-							'jsonrpc' => "2.0",
-							'result' => $order
-						);
+					$order_data['language_id'] = $this->config->get('config_language_id');
+					$order_data['currency_id'] = $this->currency->getId($this->session->data['currency']);
+					$order_data['currency_code'] = $this->session->data['currency'];
+					$order_data['currency_value'] = $this->currency->getValue($this->session->data['currency']);
+					$order_data['ip'] = $this->request->server['REMOTE_ADDR'];
+
+					if (!empty($this->request->server['HTTP_X_FORWARDED_FOR'])) {
+						$order_data['forwarded_ip'] = $this->request->server['HTTP_X_FORWARDED_FOR'];
+					} elseif (!empty($this->request->server['HTTP_CLIENT_IP'])) {
+						$order_data['forwarded_ip'] = $this->request->server['HTTP_CLIENT_IP'];
+					} else {
+						$order_data['forwarded_ip'] = '';
+					}
+
+					if (isset($this->request->server['HTTP_USER_AGENT'])) {
+						$order_data['user_agent'] = $this->request->server['HTTP_USER_AGENT'];
+					} else {
+						$order_data['user_agent'] = '';
+					}
+
+					if (isset($this->request->server['HTTP_ACCEPT_LANGUAGE'])) {
+						$order_data['accept_language'] = $this->request->server['HTTP_ACCEPT_LANGUAGE'];
+					} else {
+						$order_data['accept_language'] = '';
+					}
+					
+					$this->load->model('checkout/order');
+
+					$this->session->data['order_id'] = $this->model_checkout_order->addOrder($order_data);
+									
+					$this->load->controller('extension/payment/' . $stable_payment_method['code'] . '/' . $stable_payment_method['flow']);
+									
+					$output = $this->response->getOutput();
+					
+					$json = json_decode($output, true);
+
+					if (!empty($json['error'])) {
+						$this->errors[] = $json['error'];
+					} else {
+						$order = $this->model_extension_stable_frontend->getOrder($this->session->data['order_id']);
+
+						if ($order && $order['order_status_id'] > 0) {
+							$data = array(
+								'jsonrpc' => "2.0",
+								'result' => $order
+							);
+
+							$chat_action_data = array(
+								'chat_id' => $chat['chat_id'],
+								'tool_code' => 'checkout',
+								'action_code' => 'createOrder',
+								'action_message' => sprintf('Create Order with ID %s.', $order['order_id'])
+							);
 						
-						$chat_action_data = array(
-							'chat_id' => $chat['chat_id'],
-							'tool_code' => 'checkout',
-							'action_code' => 'createOrder',
-							'action_message' => sprintf('Create Order with ID %s.', $order['order_id'])
-						);
-					
-						$this->model_extension_module_stable->addChatAction($chat_action_data);
-					}
-					
-					$this->cart->clear();
+							$this->model_extension_module_stable->addChatAction($chat_action_data);
+							
+							$this->cart->clear();
 
-					unset($this->session->data['shipping_method']);
-					unset($this->session->data['shipping_methods']);
-					unset($this->session->data['payment_method']);
-					unset($this->session->data['payment_methods']);
-					unset($this->session->data['guest']);
-					unset($this->session->data['comment']);
-					unset($this->session->data['order_id']);
-					unset($this->session->data['coupon']);
-					unset($this->session->data['reward']);
-					unset($this->session->data['voucher']);
-					unset($this->session->data['vouchers']);
-					unset($this->session->data['totals']);
+							unset($this->session->data['shipping_method']);
+							unset($this->session->data['shipping_methods']);
+							unset($this->session->data['payment_method']);
+							unset($this->session->data['payment_methods']);
+							unset($this->session->data['guest']);
+							unset($this->session->data['comment']);
+							unset($this->session->data['order_id']);
+							unset($this->session->data['coupon']);
+							unset($this->session->data['reward']);
+							unset($this->session->data['voucher']);
+							unset($this->session->data['vouchers']);
+							unset($this->session->data['totals']);
+						} else {
+							$this->errors[] = 'Payment could not be completed! The order was created but never confirmed.';
+						}
+					}
 				} else {
-					$data = array(
-						'jsonrpc' => "2.0"
-					);
-					
-					$data = array_merge($data, $json);
+					$this->errors[] = sprintf('Payment method %s cannot be completed in chat! It requires the customer to finish payment on the provider site.', $this->session->data['payment_method']['code']);
 				}
 			}
 		}
@@ -2048,6 +2259,13 @@ class ControllerExtensionStableFrontend extends Controller {
 			
 			if ($chat) {
 				if ($this->validateToolPermission('checkout')) {
+					$_config = new Config();
+					$_config->load('stable');
+					
+					$config_setting = $_config->get('stable_setting');
+					
+					$setting = array_replace_recursive((array)$config_setting, (array)$this->config->get('module_stable_setting'));
+					
 					$this->model_extension_stable_frontend->refreshStartup($chat);
 					
 					$this->load->model('setting/extension');
@@ -2092,19 +2310,69 @@ class ControllerExtensionStableFrontend extends Controller {
 
 							$method = $this->{'model_extension_payment_' . $result['code']}->getMethod(array('country_id' => $request['country_id'], 'zone_id' => $request['zone_id']), $total);
 
-							if ($method) {
+							if ($method) {										
 								if ($recurring) {
-									if (property_exists($this->{'model_extension_payment_' . $result['code']}, 'recurringPayments') && $this->{'model_extension_payment_' . $result['code']}->recurringPayments()) {
-										$method_data[$result['code']] = array(
-											'code' => $method['code'],
-											'title' => $method['title']
-										);
+									if (property_exists($this->{'model_extension_payment_' . $result['code']}, 'recurringPayments') && $this->{'model_extension_payment_' . $result['code']}->recurringPayments()) {																		
+										if (!empty($setting['payment_method'][$result['code']])) {
+											$required_fields = array();
+											$optional_fields = array();
+											
+											if ($setting['payment_method'][$result['code']]['field']) {
+												foreach ($setting['payment_method'][$result['code']]['field'] as $field) {
+													if (!empty($field['required'])) {
+														$required_fields[] = $field['code'];
+													} else {
+														$optional_fields[] = $field['code'];
+													}
+												}
+											}
+											
+											$method_data[$result['code']] = array(
+												'code' => $method['code'],
+												'title' => $method['title'],
+												'flow' => $setting['payment_method'][$result['code']]['flow'],
+												'required_fields' => $required_fields,
+												'optional_fields' => $optional_fields
+											);
+										} else {
+											$method_data[$result['code']] = array(
+												'code' => $method['code'],
+												'title' => $method['title'],
+												'flow' => 'unsupported',
+												'reason' => 'This method needs the customer to complete payment on the provider\'s site!'
+											);
+										}
 									}
 								} else {
-									$method_data[$result['code']] = array(
-										'code' => $method['code'],
-										'title' => $method['title']
-									);
+									if (!empty($setting['payment_method'][$result['code']])) {
+										$required_fields = array();
+										$optional_fields = array();
+										
+										if ($setting['payment_method'][$result['code']]['field']) {
+											foreach ($setting['payment_method'][$result['code']]['field'] as $field) {
+												if (!empty($field['required'])) {
+													$required_fields[] = $field['code'];
+												} else {
+													$optional_fields[] = $field['code'];
+												}
+											}
+										}
+										
+										$method_data[$result['code']] = array(
+											'code' => $method['code'],
+											'title' => $method['title'],
+											'flow' => $setting['payment_method'][$result['code']]['flow'],
+											'required_fields' => $required_fields,
+											'optional_fields' => $optional_fields
+										);
+									} else {
+										$method_data[$result['code']] = array(
+											'code' => $method['code'],
+											'title' => $method['title'],
+											'flow' => 'unsupported',
+											'reason' => 'This method needs the customer to complete payment on the provider\'s site!'
+										);
+									}
 								}
 							}
 						}
