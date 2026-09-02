@@ -667,7 +667,7 @@ class ModelExtensionStableBackend extends Model {
 	}
 			
 	public function getCustomers($data = array()) {
-		$sql = "SELECT *, cgd.name AS customer_group FROM " . DB_PREFIX . "customer c LEFT JOIN " . DB_PREFIX . "customer_group_description cgd ON (c.customer_group_id = cgd.customer_group_id) WHERE cgd.language_id = '" . (int)$this->config->get('config_language_id') . "'";
+		$sql = "SELECT *, CONCAT(c.firstname, ' ', c.lastname) AS name, (SELECT cgd.name FROM " . DB_PREFIX . "customer_group_description cgd WHERE cgd.customer_group_id = c.customer_group_id AND cgd.language_id = '" . (int)$this->config->get('config_language_id') . "') AS customer_group FROM " . DB_PREFIX . "customer c";
 		
 		$implode = array();
 
@@ -696,7 +696,7 @@ class ModelExtensionStableBackend extends Model {
 		}
 
 		if ($implode) {
-			$sql .= " AND " . implode(" AND ", $implode);
+			$sql .= " WHERE " . implode(" AND ", $implode);
 		}
 				
 		$sort_data = array(
@@ -737,32 +737,32 @@ class ModelExtensionStableBackend extends Model {
 	}
 	
 	public function getTotalCustomers($data = array()) {
-		$sql = "SELECT COUNT(*) AS total FROM " . DB_PREFIX . "customer";
+		$sql = "SELECT COUNT(*) AS total FROM " . DB_PREFIX . "customer c";
 
 		$implode = array();
 
 		if (!empty($data['filter_name'])) {
-			$implode[] = "CONCAT(firstname, ' ', lastname) LIKE '%" . $this->db->escape($data['filter_name']) . "%'";
+			$implode[] = "CONCAT(c.firstname, ' ', c.lastname) LIKE '%" . $this->db->escape($data['filter_name']) . "%'";
 		}
 
 		if (!empty($data['filter_email'])) {
-			$implode[] = "email LIKE '" . $this->db->escape($data['filter_email']) . "%'";
+			$implode[] = "c.email LIKE '" . $this->db->escape($data['filter_email']) . "%'";
 		}
 
 		if (!empty($data['filter_customer_group_id'])) {
-			$implode[] = "customer_group_id = '" . (int)$data['filter_customer_group_id'] . "'";
+			$implode[] = "c.customer_group_id = '" . (int)$data['filter_customer_group_id'] . "'";
 		}
 		
 		if (isset($data['filter_status']) && $data['filter_status'] !== '') {
-			$implode[] = "status = '" . (int)$data['filter_status'] . "'";
+			$implode[] = "c.status = '" . (int)$data['filter_status'] . "'";
 		}
 		
 		if (!empty($data['filter_date_added_from'])) {
-			$implode[] = "DATE(date_added) >= DATE('" . $this->db->escape($data['filter_date_added_from']) . "')";
+			$implode[] = "DATE(c.date_added) >= DATE('" . $this->db->escape($data['filter_date_added_from']) . "')";
 		}
 
 		if (!empty($data['filter_date_added_to'])) {
-			$implode[] = "DATE(date_added) <= DATE('" . $this->db->escape($data['filter_date_added_to']) . "')";
+			$implode[] = "DATE(c.date_added) <= DATE('" . $this->db->escape($data['filter_date_added_to']) . "')";
 		}
 
 		if ($implode) {

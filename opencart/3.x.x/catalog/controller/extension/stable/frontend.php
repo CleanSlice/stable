@@ -492,9 +492,9 @@ class ControllerExtensionStableFrontend extends Controller {
 						'limit'               		=> $limit
 					);
 										
-					$category_total = $this->model_extension_stable_backend->getTotalCategories($filter_data);
+					$category_total = $this->model_extension_stable_frontend->getTotalCategories($filter_data);
 						
-					$categories = $this->model_extension_stable_backend->getCategories($filter_data);
+					$categories = $this->model_extension_stable_frontend->getCategories($filter_data);
 						
 					$data = array(
 						'jsonrpc' => "2.0",
@@ -540,7 +540,7 @@ class ControllerExtensionStableFrontend extends Controller {
 	
 	public function getManufacturer() {
 		$this->load->model('extension/module/stable');
-		$this->load->model('extension/stable/backend');
+		$this->load->model('extension/stable/frontend');
 		
 		$request = $this->getRequestData();
 		
@@ -604,7 +604,7 @@ class ControllerExtensionStableFrontend extends Controller {
 	
 	public function getManufacturers() {
 		$this->load->model('extension/module/stable');
-		$this->load->model('extension/stable/backend');
+		$this->load->model('extension/stable/frontend');
 		
 		$request = $this->getRequestData();
 		
@@ -617,7 +617,7 @@ class ControllerExtensionStableFrontend extends Controller {
 			
 			if ($chat) {
 				if ($this->validateToolPermission('product')) {
-					$this->model_extension_stable_backend->refreshStartup($chat);
+					$this->model_extension_stable_frontend->refreshStartup($chat);
 				
 					if (!empty($request['name'])) {
 						$name = $request['name'];
