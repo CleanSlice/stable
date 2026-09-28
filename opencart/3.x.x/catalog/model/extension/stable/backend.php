@@ -1,26 +1,23 @@
 <?php
 class ModelExtensionStableBackend extends Model {
-		
+	private $product_statement = array();
+	
 	public function refreshStartup($chat) {
-		// Language
 		$query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "language` WHERE code = '" . $this->db->escape($this->config->get('config_admin_language')) . "'");
 		
 		if ($query->num_rows) {
 			$this->config->set('config_language_id', $query->row['language_id']);
 		}
 		
-		// Language
 		$language = new Language($this->config->get('config_admin_language'));
 		$language->load($this->config->get('config_admin_language'));
+		
 		$this->registry->set('language', $language);
 		
-		// Customer
 		$this->registry->set('customer', new Cart\Customer($this->registry));
 
-		// Currency
 		$this->registry->set('currency', new Cart\Currency($this->registry));
 	
-		// Tax
 		$this->registry->set('tax', new Cart\Tax($this->registry));
 		
 		if ($this->config->get('config_tax_default') == 'shipping') {
@@ -33,13 +30,10 @@ class ModelExtensionStableBackend extends Model {
 
 		$this->tax->setStoreAddress($this->config->get('config_country_id'), $this->config->get('config_zone_id'));
 
-		// Weight
 		$this->registry->set('weight', new Cart\Weight($this->registry));
 		
-		// Length
 		$this->registry->set('length', new Cart\Length($this->registry));
 		
-		// Cart
 		$this->registry->set('cart', new Cart\Cart($this->registry));
 	}
 	
@@ -58,18 +52,18 @@ class ModelExtensionStableBackend extends Model {
 			}
 				
 			return array(
-				'category_id' 	   	=> $query->row['category_id'],
-				'name'             	=> $query->row['name'],
-				'description'      	=> $description,
-				'meta_title'       	=> $query->row['meta_title'],
-				'meta_description' 	=> $query->row['meta_description'],
-				'meta_keyword'     	=> $query->row['meta_keyword'],
-				'image'				=> $image,
-				'parent_id' 		=> $query->row['parent_id'],
-				'sort_order'  		=> $query->row['sort_order'],
-				'status'  			=> $query->row['status'],
-				'date_added'        => $query->row['date_added'],
-				'date_modified'     => $query->row['date_modified']
+				'category_id' 	   	 => $query->row['category_id'],
+				'name'             	 => $query->row['name'],
+				'description'      	 => $description,
+				'meta_title'       	 => $query->row['meta_title'],
+				'meta_description' 	 => $query->row['meta_description'],
+				'meta_keyword'     	 => $query->row['meta_keyword'],
+				'image'				 => $image,
+				'parent_category_id' => $query->row['parent_id'],
+				'sort_order'  		 => $query->row['sort_order'],
+				'status'  			 => $query->row['status'],
+				'date_added'         => $query->row['date_added'],
+				'date_modified'      => $query->row['date_modified']
 			);
 		} else {
 			return false;
@@ -283,7 +277,9 @@ class ModelExtensionStableBackend extends Model {
 	}
 			
 	public function getProduct($product_id) {		
-		$query = $this->db->query("SELECT DISTINCT *, pd.name AS name, p.image, m.name AS manufacturer, GROUP_CONCAT(DISTINCT(p2c.category_id) ORDER BY p2c.category_id ASC SEPARATOR ',') AS categories_id, (SELECT price FROM " . DB_PREFIX . "product_discount pd2 WHERE pd2.product_id = p.product_id AND pd2.quantity = '1' AND ((pd2.date_start = '0000-00-00' OR pd2.date_start < NOW()) AND (pd2.date_end = '0000-00-00' OR pd2.date_end > NOW())) ORDER BY pd2.priority ASC, pd2.price ASC LIMIT 1) AS discount, (SELECT price FROM " . DB_PREFIX . "product_special ps WHERE ps.product_id = p.product_id AND ((ps.date_start = '0000-00-00' OR ps.date_start < NOW()) AND (ps.date_end = '0000-00-00' OR ps.date_end > NOW())) ORDER BY ps.priority ASC, ps.price ASC LIMIT 1) AS special, (SELECT points FROM " . DB_PREFIX . "product_reward pr WHERE pr.product_id = p.product_id AND pr.customer_group_id = '" . (int)$this->config->get('config_customer_group_id') . "') AS reward, (SELECT ss.name FROM " . DB_PREFIX . "stock_status ss WHERE ss.stock_status_id = p.stock_status_id AND ss.language_id = '" . (int)$this->config->get('config_language_id') . "') AS stock_status, (SELECT wcd.unit FROM " . DB_PREFIX . "weight_class_description wcd WHERE p.weight_class_id = wcd.weight_class_id AND wcd.language_id = '" . (int)$this->config->get('config_language_id') . "') AS weight_class, (SELECT lcd.unit FROM " . DB_PREFIX . "length_class_description lcd WHERE p.length_class_id = lcd.length_class_id AND lcd.language_id = '" . (int)$this->config->get('config_language_id') . "') AS length_class, (SELECT AVG(rating) AS total FROM " . DB_PREFIX . "review r1 WHERE r1.product_id = p.product_id AND r1.status = '1' GROUP BY r1.product_id) AS rating, (SELECT COUNT(*) AS total FROM " . DB_PREFIX . "review r2 WHERE r2.product_id = p.product_id AND r2.status = '1' GROUP BY r2.product_id) AS reviews, p.sort_order FROM " . DB_PREFIX . "product p LEFT JOIN " . DB_PREFIX . "product_description pd ON (p.product_id = pd.product_id) JOIN " . DB_PREFIX . "product_to_category AS p2c ON (p.product_id = p2c.product_id) LEFT JOIN " . DB_PREFIX . "manufacturer m ON (p.manufacturer_id = m.manufacturer_id) WHERE p.product_id = '" . (int)$product_id . "' AND pd.language_id = '" . (int)$this->config->get('config_language_id') . "'");
+		$product_statement = $this->getProductStatement();
+				
+		$query = $this->db->query("SELECT DISTINCT *, pd.name AS name, p.image, m.name AS manufacturer, GROUP_CONCAT(DISTINCT(p2c.category_id) ORDER BY p2c.category_id ASC SEPARATOR ',') AS categories_id, " . $product_statement['discount'] . ", " . $product_statement['special'] . ", " . $product_statement['reward'] . ", " . $product_statement['review'] . ", " . $product_statement['weight_class'] . ",  " . $product_statement['length_class'] . ", " . $product_statement['tax_class'] . ", " . $product_statement['rating'] . ", p.sort_order FROM " . DB_PREFIX . "product p LEFT JOIN " . DB_PREFIX . "product_description pd ON (p.product_id = pd.product_id) JOIN " . DB_PREFIX . "product_to_category AS p2c ON (p.product_id = p2c.product_id) LEFT JOIN " . DB_PREFIX . "manufacturer m ON (p.manufacturer_id = m.manufacturer_id) WHERE p.product_id = '" . (int)$product_id . "' AND pd.language_id = '" . (int)$this->config->get('config_language_id') . "'");
 
 		if (!empty($query->row['product_id'])) {
 			$description = html_entity_decode($query->row['description'], ENT_QUOTES, 'UTF-8');
@@ -329,13 +325,16 @@ class ModelExtensionStableBackend extends Model {
 				'reward'           => $query->row['reward'],
 				'points'           => $query->row['points'],
 				'tax_class_id'     => $query->row['tax_class_id'],
+				'tax_class'        => $query->row['tax_class'],
 				'date_available'   => $query->row['date_available'],
 				'weight'           => $query->row['weight'],
 				'weight_class_id'  => $query->row['weight_class_id'],
+				'weight_class'     => $query->row['weight_class'],
 				'length'           => $query->row['length'],
 				'width'            => $query->row['width'],
 				'height'           => $query->row['height'],
 				'length_class_id'  => $query->row['length_class_id'],
+				'length_class'     => $query->row['length_class'],
 				'subtract'         => $query->row['subtract'],
 				'rating'           => round($query->row['rating']),
 				'reviews'          => $query->row['reviews'] ? $query->row['reviews'] : 0,
@@ -400,7 +399,9 @@ class ModelExtensionStableBackend extends Model {
 	}
 	
 	public function getProducts($data = array()) {
-		$sql = "SELECT p.product_id, m.name AS manufacturer, (SELECT AVG(rating) AS total FROM " . DB_PREFIX . "review r1 WHERE r1.product_id = p.product_id AND r1.status = '1' GROUP BY r1.product_id) AS rating, (SELECT price FROM " . DB_PREFIX . "product_discount pd2 WHERE pd2.product_id = p.product_id AND pd2.quantity = '1' AND ((pd2.date_start = '0000-00-00' OR pd2.date_start < NOW()) AND (pd2.date_end = '0000-00-00' OR pd2.date_end > NOW())) ORDER BY pd2.priority ASC, pd2.price ASC LIMIT 1) AS discount, (SELECT price FROM " . DB_PREFIX . "product_special ps WHERE ps.product_id = p.product_id AND ((ps.date_start = '0000-00-00' OR ps.date_start < NOW()) AND (ps.date_end = '0000-00-00' OR ps.date_end > NOW())) ORDER BY ps.priority ASC, ps.price ASC LIMIT 1) AS special";
+		$product_statement = $this->getProductStatement();
+		
+		$sql = "SELECT p.product_id, m.name AS manufacturer, " . $product_statement['discount'] . ", " . $product_statement['special'] . ", " . $product_statement['rating'];
 
 		if (!empty($data['filter_category_id'])) {
 			$sql .= " FROM " . DB_PREFIX . "category_path cp LEFT JOIN " . DB_PREFIX . "product_to_category p2c ON (cp.category_id = p2c.category_id)";
@@ -1033,14 +1034,14 @@ class ModelExtensionStableBackend extends Model {
 	}
 	
 	public function getCountries() {
-		$country_data = $this->cache->get('country.catalog');
+		$country_data = $this->cache->get('country.admin');
 
 		if (!$country_data) {
-			$query = $this->db->query("SELECT * FROM " . DB_PREFIX . "country WHERE status = '1' ORDER BY name ASC");
+			$query = $this->db->query("SELECT * FROM " . DB_PREFIX . "country ORDER BY name ASC");
 
 			$country_data = $query->rows;
 
-			$this->cache->set('country.catalog', $country_data);
+			$this->cache->set('country.admin', $country_data);
 		}
 
 		return $country_data;
@@ -1050,7 +1051,7 @@ class ModelExtensionStableBackend extends Model {
 		$zone_data = $this->cache->get('zone.' . (int)$country_id);
 
 		if (!$zone_data) {
-			$query = $this->db->query("SELECT * FROM " . DB_PREFIX . "zone WHERE country_id = '" . (int)$country_id . "' AND status = '1' ORDER BY name");
+			$query = $this->db->query("SELECT * FROM " . DB_PREFIX . "zone WHERE country_id = '" . (int)$country_id . "' ORDER BY name");
 
 			$zone_data = $query->rows;
 
@@ -1058,5 +1059,22 @@ class ModelExtensionStableBackend extends Model {
 		}
 
 		return $zone_data;
+	}
+	
+	private function getProductStatement() {
+		if ($this->product_statement) {
+			return $this->product_statement;
+		}
+				
+		$this->product_statement['discount'] = "(SELECT `pd2`.`price` FROM `" . DB_PREFIX . "product_discount` `pd2` WHERE `pd2`.`product_id` = `p`.`product_id` AND `pd2`.`customer_group_id` = '" . (int)$this->config->get('config_customer_group_id') . "'AND `pd2`.`quantity` = '1' AND ((`pd2`.`date_start` = '0000-00-00' OR `pd2`.`date_start` < NOW()) AND (`pd2`.`date_end` = '0000-00-00' OR `pd2`.`date_end` > NOW())) ORDER BY `pd2`.`priority` ASC, `pd2`.`price` ASC LIMIT 1) AS `discount`";
+		$this->product_statement['special'] = "(SELECT `ps`.`price` FROM `" . DB_PREFIX . "product_special` `ps` WHERE `ps`.`product_id` = `p`.`product_id` AND `ps`.`customer_group_id` = '" . (int)$this->config->get('config_customer_group_id') . "' AND ((`ps`.`date_start` = '0000-00-00' OR `ps`.`date_start` < NOW()) AND (`ps`.`date_end` = '0000-00-00' OR `ps`.`date_end` > NOW())) ORDER BY `ps`.`priority` ASC, `ps`.`price` ASC LIMIT 1) AS `special`";			
+		$this->product_statement['reward'] = "(SELECT `pr`.`points` FROM `" . DB_PREFIX . "product_reward` `pr` WHERE `pr`.`product_id` = `p`.`product_id` AND `pr`.`customer_group_id` = '" . (int)$this->config->get('config_customer_group_id') . "') AS `reward`";
+		$this->product_statement['review'] = "(SELECT COUNT(*) FROM `" . DB_PREFIX . "review` `r` WHERE `r`.`product_id` = `p`.`product_id` AND `r`.`status` = '1' GROUP BY `r`.`product_id`) AS `reviews`";
+		$this->product_statement['weight_class'] = "(SELECT `wcd`.`unit` FROM `" . DB_PREFIX . "weight_class_description` `wcd` WHERE `p`.`weight_class_id` = `wcd`.`weight_class_id` AND `wcd`.`language_id` = '" . (int)$this->config->get('config_language_id') . "') AS `weight_class`";
+		$this->product_statement['length_class'] = "(SELECT `lcd`.`unit` FROM `" . DB_PREFIX . "length_class_description` `lcd` WHERE `p`.`length_class_id` = `lcd`.`length_class_id` AND `lcd`.`language_id` = '" . (int)$this->config->get('config_language_id') . "') AS length_class";
+		$this->product_statement['tax_class'] = "(SELECT `lcd`.`title` FROM `" . DB_PREFIX . "tax_class` `tc` WHERE `p`.`tax_class_id` = `tc`.`tax_class_id`) AS tax_class";
+		$this->product_statement['rating'] = "(SELECT AVG(rating) AS `total` FROM `" . DB_PREFIX . "review` `r2` WHERE `r2`.`product_id` = `p`.`product_id` AND `r2`.`status` = '1' GROUP BY `r2`.`product_id`) AS rating";
+					
+		return $this->product_statement;
 	}
 }

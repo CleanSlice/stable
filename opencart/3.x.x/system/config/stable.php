@@ -284,7 +284,7 @@ $_['stable_setting'] = array(
 					'description' => 'Which stored card to charge. Omit it to pay with the card details supplied in this call — that is the default.'
 				)
 			)
-		),
+		)
 	)
 );
 ?>
