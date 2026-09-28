@@ -1,0 +1,260 @@
+{{ header }}{{ column_left }}
+<div id="content" class="module-stable">
+	<div class="page-header">
+		<div class="container-fluid">
+			<div class="float-end">
+				<button type="submit" form="form_payment" data-bs-toggle="tooltip" title="{{ button_save }}" class="btn btn-primary button-save"><i class="fas fa-save"></i></button>
+				<a href="{{ back }}" data-bs-toggle="tooltip" title="{{ button_back }}" class="btn btn-light"><i class="fas fa-reply"></i></a>
+			</div>
+			<h1>{{ heading_title }}</h1>
+			<ul class="breadcrumb">
+				{% for breadcrumb in breadcrumbs %}
+				<li class="breadcrumb-item"><a href="{{ breadcrumb['href'] }}">{{ breadcrumb['text'] }}</a></li>
+				{% endfor %}
+			</ul>
+		</div>
+	</div>
+	<div class="container-fluid">
+		{% if error_warning %}
+		<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> {{ error_warning }}</div>
+		{% endif %}
+		{% if text_version %}
+		<div class="alert alert-info"><i class="fas fa-info-circle"></i> {{ text_version }}</div>
+		{% endif %}
+		<div class="card">
+			<div class="card-header"><i class="fas fa-pencil-alt"></i> {{ text_edit }}</div>
+			<div class="card-body">
+				<form action="{{ save }}" method="post" id="form_payment" data-oc-toggle="ajax">
+					<div class="row">
+						<div class="col col-6 col-md-3 col-lg-2">
+							<div class="row mb-3">
+								<label class="col-form-label" for="input_status">{{ entry_status }}</label>
+								<div id="input-status">
+									<input type="hidden" name="module_stable_status" value="0" />
+									<input type="checkbox" name="module_stable_status" value="1" class="switch" {% if status %} checked="checked" {% endif %} />
+								</div>
+							</div>
+						</div>
+						<div class="col col-6 col-md-3 col-lg-2">
+							<div class="row mb-3">
+								<label class="col-form-label" for="input-debug-status">{{ entry_debug_status }}</label>
+								<div id="input-debug-status">
+									<input type="hidden" name="module_stable_setting[debug_status]" value="0" />
+									<input type="checkbox" name="module_stable_setting[debug_status]" value="1" class="switch" {% if setting['debug_status'] %} checked="checked" {% endif %} />
+								</div>
+							</div>
+						</div>
+					</div>
+					<ul class="nav nav-tabs">
+						{% for side in setting['side'] %}
+						<li class="nav-tab {% if loop.first %} active {% endif %}"><a href="#tab-{{ side['code'] }}" data-bs-toggle="tab" class="tab"><i class="tab-icon-status tab-icon-status-{% if side['status'] %}on{% else %}off{% endif %}"></i><span class="tab-title">{{ attribute(_context, 'text_side_' ~ side['code']) }}</span></a></li>
+						{% endfor %}
+					</ul>
+					<div class="section-content">
+						<div class="tab-content">
+							{% for side in setting['side'] %}
+							<div class="tab-pane {% if loop.first %} active {% endif %}" id="tab-{{ side['code'] }}">
+								<div class="row flex-row">
+									<div class="col col-md-6">
+										<div class="card card-connection">
+											<div class="card-heading">
+												<h3 class="card-title"><i class="fa fa-plug"></i> {{ text_connection }}</h3>
+											</div>
+											<div class="card-body">
+												<div class="row mb-3">
+													<label class="col-form-label" for="input-{{ side['code'] }}-api-key">{{ entry_api_key }}</label>
+													<div class="input-group">
+														<input type="text" name="module_stable_setting[side][{{ side['code'] }}][api_key]" value="{{ side['api_key'] }}" placeholder="{{ entry_api_key }}" id="input-{{ side['code'] }}-api-key" class="form-control" />
+													</div>
+												</div>
+												<div class="row mb-3">
+													<label class="col-form-label" for="input-{{ side['code'] }}-agent-id">{{ entry_agent_id }}</label>
+													<div class="input-group">
+														<input type="text" name="module_stable_setting[side][{{ side['code'] }}][agent_id]" value="{{ side['agent_id'] }}" placeholder="{{ entry_agent_id }}" id="input-{{ side['code'] }}-agent-id" class="form-control" />
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+									<div class="col col-md-6">
+										<div class="card card-configuration">
+											<div class="card-header"><i class="fas fa-cog"></i> {{ text_configuration }}</div>
+											<div class="card-body">
+												<div class="row mb-3">
+													<label class="col-form-label" for="input-{{ side['code'] }}-status"><span data-bs-toggle="tooltip" title="{{ attribute(_context, 'help_' ~ side['code'] ~ '_status') }}">{{ attribute(_context, 'entry_' ~ side['code'] ~ '_status') }}</span></label>
+													<div id="input-{{ side['code'] }}-status" class="input-group">
+														<input type="hidden" name="module_stable_setting[side][{{ side['code'] }}][status]" value="0" />
+														<input type="checkbox" name="module_stable_setting[side][{{ side['code'] }}][status]" value="1" class="switch" {% if side['status'] %} checked="checked" {% endif %} />
+													</div>
+												</div>
+												<div class="row mb-3">
+													<label class="col-form-label" for="input-{{ side['code'] }}-chat-session-duration"><span data-bs-toggle="tooltip" title="{{ help_chat_session_duration }}">{{ entry_chat_session_duration }}</span></label>
+													<div class="input-group">
+														<select name="module_stable_setting[side][{{ side['code'] }}][chat_session_duration]" id="input-{{ side['code'] }}-chat-session-duration" class="form-select">
+															{% for chat_session_duration in setting['chat_session_duration'] %}
+															{% if (chat_session_duration == side['chat_session_duration']) %}
+															<option value="{{ chat_session_duration }}" selected="selected">{{ chat_session_duration }}</option>
+															{% else %}
+															<option value="{{ chat_session_duration }}">{{ chat_session_duration }}</option>
+															{% endif %}
+															{% endfor %}
+														</select>
+													</div>
+												</div>
+												{% if side['code'] == 'frontend' %}
+												<div class="row mb-3">
+													<label class="col-form-label" for="input-{{ side['code'] }}-store"><span data-bs-toggle="tooltip" title="{{ help_store }}">{{ entry_store }}</span></label>
+													<div class="input-group">
+														<div id="input-{{ side['code'] }}-store" class="form-control form-control-list">
+															{% for store in stores %}
+															<div class="form-check">
+																<input type="checkbox" name="module_stable_setting[side][{{ side['code'] }}][store_id][]" value="{{ store['store_id'] }}" id="input-{{ side['code'] }}-store-{{ store['store_id'] }}" class="form-check-input form-check-input-mini" {% if store['store_id'] in side['store_id'] %} checked="checked" {% endif %} />
+																<label for="input-{{ side['code'] }}-store-{{ store['store_id'] }}" class="form-check-label">{{ store['name'] }}</label>
+															</div>
+															{% endfor %}
+														</div>
+													</div>
+												</div>	
+												{% endif %}
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="row flex-row">
+									<div class="col col-md-6">
+										<div class="card card-tool-permissions">
+											<div class="card-header"><i class="fas fa-lock"></i> {{ text_tool_permissions }}</h3></div>
+											<div class="card-body">
+												<div class="table-responsive">
+													<table class="table table-bordered table-hover">
+														<thead>
+															<tr>
+																<td class="text-center">{{ column_tool }}</td>
+																<td class="text-center">{{ column_status }}</td>
+															</tr>
+														</thead>
+														<tbody>
+															{% for tool in side['tool'] %}
+															<tr>
+																<td class="text-left">
+																	<div class="tool-name">{{ attribute(_context, 'text_tool_' ~ side['code'] ~ '_' ~ tool['code']) }}</div>
+																	<div class="tool-help">{{ attribute(_context, 'help_tool_' ~ side['code'] ~ '_' ~ tool['code']) }}</div>
+																</td>
+																<td class="text-center">
+																	<div id="input-{{ side['code'] }}-tool-{{ tool['code'] }}">
+																		<input type="hidden" name="module_stable_setting[side][{{ side['code'] }}][tool][{{ tool['code'] }}][status]" value="0" />
+																		<input type="checkbox" name="module_stable_setting[side][{{ side['code'] }}][tool][{{ tool['code'] }}][status]" value="1" class="switch" {% if side['tool'][tool['code']]['status'] %} checked="checked" {% endif %} />
+																	</div>
+																</td>
+															</tr>
+															{% endfor %}
+														</tbody>
+													</table>
+												</div>
+											</div>
+										</div>
+									</div>
+									<div class="col col-md-6">
+										<div class="card card-tool-analytics">
+											<div class="card-header"><i class="fas fa-line-chart"></i> {{ text_tool_analytics }}</div>
+											<div class="card-body">
+												<div class="table-responsive">
+													<table class="table table-bordered table-hover">
+														<thead>
+															<tr>
+																<td class="text-center">{{ column_tool }}</div></td>
+																{% if side['code'] == 'frontend' %}
+																<td class="text-center">{{ column_uses_customer }}</td>
+																{% else %}
+																<td class="text-center">{{ column_uses_user }}</td>
+																{% endif %}
+																<td class="text-center">{{ column_uses_total }}</td>
+															</tr>
+														</thead>
+														<tbody>
+															{% for tool in side['tool'] %}
+															<tr>
+																<td class="text-left"><div class="tool-name">{{ attribute(_context, 'text_tool_' ~ side['code'] ~ '_' ~ tool['code']) }}</div></td>
+																<td class="text-center">{{ tool['uses_chat'] }}</td>
+																<td class="text-center">{{ tool['uses_total'] }}</td>
+															</tr>
+															{% endfor %}
+														</tbody>
+													</table>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="row flex-row">
+									<div class="col col-md-12">
+										<div class="card card-default card-recent-actions">
+											<div class="card-header"><i class="fas fa-rocket"></i> {{ text_recent_actions }}</div>
+											<div class="card-body">
+												<div class="table-responsive">
+													<table class="table table-bordered table-hover">
+														<thead>
+															<tr>
+																{% if side['code'] == 'frontend' %}
+																<td class="text-center">{{ column_customer_id }}</td>
+																{% else %}
+																<td class="text-center">{{ column_user_id }}</td>
+																{% endif %}
+																<td class="text-center">{{ column_tool }}</td>
+																<td class="text-center">{{ column_action_message }}</td>
+																<td class="text-center">{{ column_date_added }}</td>
+															</tr>
+														</thead>
+														<tbody>
+															{% for recent_action in side['recent_action'] %}
+															<tr>
+																{% if side['code'] == 'frontend' %}
+																<td class="text-center"><a href="{{ recent_action['customer_href'] }}" target="_blank">{{ recent_action['customer_id'] }}</a></td>
+																{% else %}
+																<td class="text-center"><a href="{{ recent_action['user_href'] }}" target="_blank">{{ recent_action['user_id'] }}</a></td>
+																{% endif %}
+																{% if recent_action['tool_code'] %}
+																<td class="text-left">{{ attribute(_context, 'text_tool_' ~ side['code'] ~ '_' ~ recent_action['tool_code']) }}</td>
+																{% else %}
+																<td class="text-left">{{ text_tool_default }}</td>
+																{% endif %}
+																<td class="text-left">{{ recent_action['action_message'] }}</td>
+																<td class="text-center">{{ recent_action['date_added'] }}</td>
+															</tr>
+															{% endfor %}
+														</tbody>
+													</table>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							{% endfor %}
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+
+$('.module-stable .switch').bootstrapSwitch({
+    'onColor': 'success',
+    'onText': '{{ text_on }}',
+    'offText': '{{ text_off }}'
+});
+
+$('#form-module').delegate('.view-password', 'click', function(event) {
+	event.preventDefault();
+	
+	if ($('#' + $(this).attr('field_id')).attr('type') == 'password') {
+		$('#' + $(this).attr('field_id')).attr('type', 'text');
+	} else {
+		$('#' + $(this).attr('field_id')).attr('type', 'password');
+	}
+});
+
+</script>
+{{ footer }}
