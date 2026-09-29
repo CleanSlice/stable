@@ -1072,7 +1072,7 @@ class ModelExtensionStableBackend extends Model {
 		$this->product_statement['review'] = "(SELECT COUNT(*) FROM `" . DB_PREFIX . "review` `r` WHERE `r`.`product_id` = `p`.`product_id` AND `r`.`status` = '1' GROUP BY `r`.`product_id`) AS `reviews`";
 		$this->product_statement['weight_class'] = "(SELECT `wcd`.`unit` FROM `" . DB_PREFIX . "weight_class_description` `wcd` WHERE `p`.`weight_class_id` = `wcd`.`weight_class_id` AND `wcd`.`language_id` = '" . (int)$this->config->get('config_language_id') . "') AS `weight_class`";
 		$this->product_statement['length_class'] = "(SELECT `lcd`.`unit` FROM `" . DB_PREFIX . "length_class_description` `lcd` WHERE `p`.`length_class_id` = `lcd`.`length_class_id` AND `lcd`.`language_id` = '" . (int)$this->config->get('config_language_id') . "') AS length_class";
-		$this->product_statement['tax_class'] = "(SELECT `lcd`.`title` FROM `" . DB_PREFIX . "tax_class` `tc` WHERE `p`.`tax_class_id` = `tc`.`tax_class_id`) AS tax_class";
+		$this->product_statement['tax_class'] = "(SELECT `tc`.`title` FROM `" . DB_PREFIX . "tax_class` `tc` WHERE `p`.`tax_class_id` = `tc`.`tax_class_id`) AS `tax_class`";
 		$this->product_statement['rating'] = "(SELECT AVG(rating) AS `total` FROM `" . DB_PREFIX . "review` `r2` WHERE `r2`.`product_id` = `p`.`product_id` AND `r2`.`status` = '1' GROUP BY `r2`.`product_id`) AS rating";
 					
 		return $this->product_statement;
