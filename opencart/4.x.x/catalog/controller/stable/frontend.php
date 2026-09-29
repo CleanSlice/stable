@@ -2,6 +2,17 @@
 namespace Opencart\Catalog\Controller\Extension\Stable\Stable;
 class Frontend extends \Opencart\System\Engine\Controller {
 	private $errors = [];
+	private $separator = '';
+	
+	public function __construct($registry) {
+        parent::__construct($registry);
+
+		if (version_compare((string)VERSION, '4.0.2.0', '>=')) {
+			$this->separator = '.';
+		} else {
+			$this->separator = '|';
+		}
+    }
 	
 	public function index(): void {
 		$_config = new \Opencart\System\Engine\Config();
@@ -26,7 +37,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		$data['result']['tools']['getCategory'] = [
 			'name' => 'getCategory',
 			'description' => 'Get information about the product category',
-			'endpoint' => $this->url->link('extension/stable/frontend/getCategory', '', true),
+			'endpoint' => $this->url->link('extension/stable/stable/frontend' . $this->separator . 'getCategory', ''),
 			'requestMethod' => 'POST',
 			'inputSchema' => [
 				'type' => 'object',
@@ -41,7 +52,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		$data['result']['tools']['getCategories'] = [
 			'name' => 'getCategories',
 			'description' => 'Get information about product categories',
-			'endpoint' => $this->url->link('extension/stable/frontend/getCategories', '', true],
+			'endpoint' => $this->url->link('extension/stable/stable/frontend' . $this->separator . 'getCategories', ''),
 			'requestMethod' => 'POST',
 			'inputSchema' => [
 				'type' => 'object',
@@ -60,7 +71,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		$data['result']['tools']['getManufacturer'] = [
 			'name' => 'getManufacturer',
 			'description' => 'Get information about the product manufacturer',
-			'endpoint' => $this->url->link('extension/stable/frontend/getManufacturer', '', true),
+			'endpoint' => $this->url->link('extension/stable/stable/frontend' . $this->separator . 'getManufacturer', ''),
 			'requestMethod' => 'POST',
 			'inputSchema' => [
 				'type' => 'object',
@@ -75,7 +86,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		$data['result']['tools']['getManufacturers'] = [
 			'name' => 'getManufacturers',
 			'description' => 'Get information about product manufacturers',
-			'endpoint' => $this->url->link('extension/stable/frontend/getManufacturers', '', true),
+			'endpoint' => $this->url->link('extension/stable/stable/frontend' . $this->separator . 'getManufacturers', ''),
 			'requestMethod' => 'POST',
 			'inputSchema' => [
 				'type' => 'object',
@@ -93,7 +104,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		$data['result']['tools']['getProduct'] = [
 			'name' => 'getProduct',
 			'description' => 'Get information about the product',
-			'endpoint' => $this->url->link('extension/stable/frontend/getProduct', '', true),
+			'endpoint' => $this->url->link('extension/stable/stable/frontend' . $this->separator . 'getProduct', ''),
 			'requestMethod' => 'POST',
 			'inputSchema' => [
 				'type' => 'object',
@@ -108,7 +119,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		$data['result']['tools']['getProducts'] = [
 			'name' => 'getProducts',
 			'description' => 'Get information about products',
-			'endpoint' =>$this->url->link('extension/stable/frontend/getProducts', '', true),
+			'endpoint' =>$this->url->link('extension/stable/stable/frontend' . $this->separator . 'getProducts', ''),
 			'requestMethod' => 'POST',
 			'inputSchema' => [
 				'type' => 'object',
@@ -135,7 +146,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		$data['result']['tools']['getCurrentCustomer'] = [
 			'name' => 'getCurrentCustomer',
 			'description' => 'Get information about the current customer',
-			'endpoint' => $this->url->link('extension/stable/frontend/getCurrentCustomer', '', true),
+			'endpoint' => $this->url->link('extension/stable/stable/frontend' . $this->separator . 'getCurrentCustomer', ''),
 			'requestMethod' => 'POST',
 			'inputSchema' => [
 				'type' => 'object',
@@ -149,7 +160,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		$data['result']['tools']['getCurrentCustomerOrder'] = [
 			'name' => 'getCurrentCustomerOrder',
 			'description' => 'Get information about current customer order',
-			'endpoint' => $this->url->link('extension/stable/frontend/getCurrentCustomerOrder', '', true),
+			'endpoint' => $this->url->link('extension/stable/stable/frontend' . $this->separator . 'getCurrentCustomerOrder', ''),
 			'requestMethod' => 'POST',
 			'inputSchema' => [
 				'type' => 'object',
@@ -164,7 +175,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		$data['result']['tools']['getCurrentCustomerOrders'] = [
 			'name' => 'getCurrentCustomerOrders',
 			'description' => 'Get information about current customer orders',
-			'endpoint' => $this->url->link('extension/stable/frontend/getCurrentCustomerOrders', '', true),
+			'endpoint' => $this->url->link('extension/stable/stable/frontend' . $this->separator . 'getCurrentCustomerOrders', ''),
 			'requestMethod' => 'POST',
 			'inputSchema' => [
 				'type' => 'object',
@@ -179,7 +190,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		$data['result']['tools']['addCartProduct'] = [
 			'name' => 'addCartProduct',
 			'description' => 'Add product to cart',
-			'endpoint' => $this->url->link('extension/stable/frontend/addCartProduct', '', true),
+			'endpoint' => $this->url->link('extension/stable/stable/frontend' . $this->separator . 'addCartProduct', ''),
 			'requestMethod' => 'POST',
 			'inputSchema' => [
 				'type' => 'object',
@@ -195,7 +206,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 							'description' => 'The value of the product option (product_option_value_id, text, or array of IDs for checkboxes)'
 						]
 					],						
-					'recurring_id' => ['type' => 'number', 'description' => 'Recurring ID', 'default' => 0],
+					'subscription_plan_id' => ['type' => 'number', 'description' => 'Subscription plan ID', 'default' => 0],
 				],
 				'required' => ['chat_id', 'product_id']
 			]
@@ -204,7 +215,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		$data['result']['tools']['editCartProduct'] = [
 			'name' => 'editCartProduct',
 			'description' => 'Edit product in the cart',
-			'endpoint' => $this->url->link('extension/stable/frontend/editCartProduct', '', true),
+			'endpoint' => $this->url->link('extension/stable/stable/frontend' . $this->separator . 'editCartProduct', ''),
 			'requestMethod' => 'POST',
 			'inputSchema' => [
 				'type' => 'object',
@@ -220,7 +231,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		$data['result']['tools']['deleteCartProduct'] = [
 			'name' => 'deleteCartProduct',
 			'description' => 'Delete product from the cart',
-			'endpoint' => $this->url->link('extension/stable/frontend/deleteCartProduct', '', true),
+			'endpoint' => $this->url->link('extension/stable/stable/frontend' . $this->separator . 'deleteCartProduct', ''),
 			'requestMethod' => 'POST',
 			'inputSchema' => [
 				'type' => 'object',
@@ -235,7 +246,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		$data['result']['tools']['getCartProducts'] = [
 			'name' => 'getCartProducts',
 			'description' => 'Get information about products in the cart',
-			'endpoint' => $this->url->link('extension/stable/frontend/getCartProducts', '', true),
+			'endpoint' => $this->url->link('extension/stable/stable/frontend' . $this->separator . 'getCartProducts', ''),
 			'requestMethod' => 'POST',
 			'inputSchema' => [
 				'type' => 'object',
@@ -249,7 +260,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		$data['result']['tools']['createOrder'] = [
 			'name' => 'createOrder',
 			'description' => 'Create Order',
-			'endpoint' => $this->url->link('extension/stable/frontend/createOrder', '', true],
+			'endpoint' => $this->url->link('extension/stable/stable/frontend' . $this->separator . 'createOrder', ''),
 			'requestMethod' => 'POST',
 			'inputSchema' => [
 				'type' => 'object',
@@ -296,7 +307,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 				$data['result']['tools']['createOrder']['inputSchema']['allOf'][] = [
 					'if' => [
 						'properties' => [
-							'payment_method_code' => ['const' => $payment_method['code'])
+							'payment_method_code' => ['const' => $payment_method['code']]
 						],
 						'required' => ['payment_method_code']
 					],
@@ -310,7 +321,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		$data['result']['tools']['getShippingMethods'] = [
 			'name' => 'getShippingMethods',
 			'description' => 'Get information about shipping methods',
-			'endpoint' => $this->url->link('extension/stable/frontend/getShippingMethods', '', true),
+			'endpoint' => $this->url->link('extension/stable/stable/frontend' . $this->separator . 'getShippingMethods', ''),
 			'requestMethod' => 'POST',
 			'inputSchema' => [
 				'type' => 'object',
@@ -326,7 +337,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		$data['result']['tools']['getPaymentMethods'] = [
 			'name' => 'getPaymentMethods',
 			'description' => 'Get information about payment methods',
-			'endpoint' => $this->url->link('extension/stable/frontend/getPaymentMethods', '', true),
+			'endpoint' => $this->url->link('extension/stable/stable/frontend' . $this->separator . 'getPaymentMethods', ''),
 			'requestMethod' => 'POST',
 			'inputSchema' => [
 				'type' => 'object',
@@ -342,7 +353,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		$data['result']['tools']['getCountries'] = [
 			'name' => 'getCountries',
 			'description' => 'Get information about countries',
-			'endpoint' => $this->url->link('extension/stable/frontend/getCountries', '', true),
+			'endpoint' => $this->url->link('extension/stable/stable/frontend' . $this->separator . 'getCountries', ''),
 			'requestMethod' => 'POST',
 			'inputSchema' => [
 				'type' => 'object',
@@ -356,7 +367,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		$data['result']['tools']['getZonesByCountryId'] = [
 			'name' => 'getZonesByCountryId',
 			'description' => 'Get information about zones for this country ID',
-			'endpoint' => $this->url->link('extension/stable/frontend/getZonesByCountryId', '', true),
+			'endpoint' => $this->url->link('extension/stable/stable/frontend' . $this->separator . 'getZonesByCountryId', ''),
 			'requestMethod' => 'POST',
 			'inputSchema' => [
 				'type' => 'object',
@@ -1165,26 +1176,26 @@ class Frontend extends \Opencart\System\Engine\Controller {
 							}
 						}
 						
-						if (!empty($request['recurring_id'])) {
-							$recurring_id = $request['recurring_id'];
+						if (!empty($request['subscription_plan_id'])) {
+							$subscription_plan_id = (int)$request['subscription_plan_id'];
 						} else {
-							$recurring_id = 0;
+							$subscription_plan_id = 0;
 						}
 
-						if ($product['recurrings']) {
-							$recurring_ids = [];
+						if ($product['subscriptions']) {
+							$subscription_plan_ids = [];
 
-							foreach ($product['recurrings'] as $recurring) {
-								$recurring_ids[] = $recurring['recurring_id'];
+							foreach ($product['subscriptions'] as $subscription) {
+								$subscription_plan_ids[] = $subscription['subscription_plan_id'];
 							}
 
-							if (!in_array($recurring_id, $recurring_ids)) {
-								$this->errors[] = 'Please select a payment recurring!';
+							if (!in_array($subscription_plan_id, $subscription_plan_ids)) {
+								$this->errors[] = 'Please select a subscription plan!';
 							}
 						}
 					
 						if (!$this->errors) {
-							$this->cart->add($request['product_id'], $quantity, $option, $recurring_id);
+							$this->cart->add($request['product_id'], $quantity, $option, $subscription_plan_id);
 							
 							$products = $this->cart->getProducts();
 							
@@ -1713,6 +1724,8 @@ class Frontend extends \Opencart\System\Engine\Controller {
 								
 				$method_data = [];
 
+				$this->load->model('setting/extension');
+
 				$results = $this->model_setting_extension->getExtensionsByType('shipping');
 
 				foreach ($results as $result) {
@@ -1823,8 +1836,10 @@ class Frontend extends \Opencart\System\Engine\Controller {
 				if (!empty($this->session->data['payment_method']['code'])) {
 					$payment = explode('.', $this->session->data['payment_method']['code']);
 					
-					if (empty($setting['payment_method'][$payment[0]])) {
-						$stable_payment_method = $setting['payment_method'][$this->session->data['payment_method']['code']];
+					if (!empty($setting['payment_method'][$payment[0]])) {
+						$stable_payment_method = $setting['payment_method'][$payment[0]];
+
+						$payment_extension_info = $this->model_setting_extension->getExtensionByCode('payment', $payment[0]);
 						
 						$order_data = [];
 
@@ -2116,7 +2131,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 
 						$this->session->data['order_id'] = $this->model_checkout_order->addOrder($order_data);
 										
-						$this->load->controller('extension/payment/' . $stable_payment_method['code'] . '/' . $stable_payment_method['flow']);
+						$this->load->controller('extension/' . $payment_extension_info['extension'] . '/payment/' . $stable_payment_method['code'] . $this->separator . $stable_payment_method['flow']);
 										
 						$output = $this->response->getOutput();
 						

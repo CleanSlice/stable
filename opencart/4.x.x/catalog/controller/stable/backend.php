@@ -2,8 +2,19 @@
 namespace Opencart\Catalog\Controller\Extension\Stable\Stable;
 class Backend extends \Opencart\System\Engine\Controller {
 	private $errors = [];
+	private $separator = '';
 	
-	public function index(): void { {
+	public function __construct($registry) {
+        parent::__construct($registry);
+
+		if (version_compare((string)VERSION, '4.0.2.0', '>=')) {
+			$this->separator = '.';
+		} else {
+			$this->separator = '|';
+		}
+    }
+	
+	public function index(): void {
 		$_config = new \Opencart\System\Engine\Config();
 		$_config->addPath(DIR_EXTENSION . 'stable/system/config/');
 		$_config->load('stable');
@@ -26,7 +37,7 @@ class Backend extends \Opencart\System\Engine\Controller {
 		$data['result']['tools']['getCategory'] = [
 			'name' => 'getCategory',
 			'description' => 'Get information about the product category',
-			'endpoint' => $this->url->link('extension/stable/backend/getCategory', ''),
+			'endpoint' => $this->url->link('extension/stable/stable/backend' . $this->separator . 'getCategory', ''),
 			'requestMethod' => 'POST',
 			'inputSchema' => [
 				'type' => 'object',
@@ -41,7 +52,7 @@ class Backend extends \Opencart\System\Engine\Controller {
 		$data['result']['tools']['getCategories'] = [
 			'name' => 'getCategories',
 			'description' => 'Get information about product categories',
-			'endpoint' => $this->url->link('extension/stable/backend/getCategories', ''),
+			'endpoint' => $this->url->link('extension/stable/stable/backend' . $this->separator . 'getCategories', ''),
 			'requestMethod' => 'POST',
 			'inputSchema' => [
 				'type' => 'object',
@@ -50,7 +61,7 @@ class Backend extends \Opencart\System\Engine\Controller {
 					'name' => ['type' => 'string', 'description' => 'Search categories by name'],
 					'parent_category_id' => ['type' => 'number', 'description' => 'Search categories by parent Category ID'],
 					'status' => ['type' => 'number', 'description' => 'Search categories by status (1/0)'],
-					'sort' => ['type' => 'string', 'description' => 'Sort in the category search results (name/status/sort_order]', 'default' => 'sort_order'],
+					'sort' => ['type' => 'string', 'description' => 'Sort in the category search results (name/status/sort_order)', 'default' => 'sort_order'],
 					'order' => ['type' => 'string', 'description' => 'Order in the category search results (ASC/DESC)', 'default' => 'ASC'],
 					'page' => ['type' => 'number', 'description' => 'Page number in the category search results', 'default' => 1]
 				],
@@ -61,7 +72,7 @@ class Backend extends \Opencart\System\Engine\Controller {
 		$data['result']['tools']['getManufacturer'] = [
 			'name' => 'getManufacturer',
 			'description' => 'Get information about the product manufacturer',
-			'endpoint' => $this->url->link('extension/stable/backend/getManufacturer', ''),
+			'endpoint' => $this->url->link('extension/stable/stable/backend' . $this->separator . 'getManufacturer', ''),
 			'requestMethod' => 'POST',
 			'inputSchema' => [
 				'type' => 'object',
@@ -76,7 +87,7 @@ class Backend extends \Opencart\System\Engine\Controller {
 		$data['result']['tools']['getManufacturers'] = [
 			'name' => 'getManufacturers',
 			'description' => 'Get information about product manufacturers',
-			'endpoint' => $this->url->link('extension/stable/backend/getManufacturers', ''),
+			'endpoint' => $this->url->link('extension/stable/stable/backend' . $this->separator . 'getManufacturers', ''),
 			'requestMethod' => 'POST',
 			'inputSchema' => [
 				'type' => 'object',
@@ -94,7 +105,7 @@ class Backend extends \Opencart\System\Engine\Controller {
 		$data['result']['tools']['getProduct'] = [
 			'name' => 'getProduct',
 			'description' => 'Get information about the product',
-			'endpoint' => $this->url->link('extension/stable/backend/getProduct', ''),
+			'endpoint' => $this->url->link('extension/stable/stable/backend' . $this->separator . 'getProduct', ''),
 			'requestMethod' => 'POST',
 			'inputSchema' => [
 				'type' => 'object',
@@ -109,7 +120,7 @@ class Backend extends \Opencart\System\Engine\Controller {
 		$data['result']['tools']['getProducts'] = [
 			'name' => 'getProducts',
 			'description' => 'Get information about products',
-			'endpoint' =>$this->url->link('extension/stable/backend/getProducts', ''),
+			'endpoint' =>$this->url->link('extension/stable/stable/backend' . $this->separator . 'getProducts', ''),
 			'requestMethod' => 'POST',
 			'inputSchema' => [
 				'type' => 'object',
@@ -137,7 +148,7 @@ class Backend extends \Opencart\System\Engine\Controller {
 		$data['result']['tools']['getCustomer'] = [
 			'name' => 'getCustomer',
 			'description' => 'Get information about the customer',
-			'endpoint' => $this->url->link('extension/stable/backend/getCustomer', ''),
+			'endpoint' => $this->url->link('extension/stable/stable/backend' . $this->separator . 'getCustomer', ''),
 			'requestMethod' => 'POST',
 			'inputSchema' => [
 				'type' => 'object',
@@ -152,7 +163,7 @@ class Backend extends \Opencart\System\Engine\Controller {
 		$data['result']['tools']['getCustomers'] = [
 			'name' => 'getCustomers',
 			'description' => 'Get information about customers',
-			'endpoint' => $this->url->link('extension/stable/backend/getCustomers', ''),
+			'endpoint' => $this->url->link('extension/stable/stable/backend' . $this->separator . 'getCustomers', ''),
 			'requestMethod' => 'POST',
 			'inputSchema' => [
 				'type' => 'object',
@@ -175,7 +186,7 @@ class Backend extends \Opencart\System\Engine\Controller {
 		$data['result']['tools']['getCustomerGroups'] = [
 			'name' => 'getCustomerGroups',
 			'description' => 'Get information about customer groups',
-			'endpoint' => $this->url->link('extension/stable/backend/getCustomerGroups', ''),
+			'endpoint' => $this->url->link('extension/stable/stable/backend' . $this->separator . 'getCustomerGroups', ''),
 			'requestMethod' => 'POST',
 			'inputSchema' => [
 				'type' => 'object',
@@ -189,7 +200,7 @@ class Backend extends \Opencart\System\Engine\Controller {
 		$data['result']['tools']['getOrder'] = [
 			'name' => 'getOrder',
 			'description' => 'Get information about the order',
-			'endpoint' => $this->url->link('extension/stable/backend/getOrder', ''),
+			'endpoint' => $this->url->link('extension/stable/stable/backend' . $this->separator . 'getOrder', ''),
 			'requestMethod' => 'POST',
 			'inputSchema' => [
 				'type' => 'object',
@@ -204,7 +215,7 @@ class Backend extends \Opencart\System\Engine\Controller {
 		$data['result']['tools']['getOrders'] = [
 			'name' => 'getOrders',
 			'description' => 'Get information about orders',
-			'endpoint' => $this->url->link('extension/stable/backend/getOrders', ''),
+			'endpoint' => $this->url->link('extension/stable/stable/backend' . $this->separator . 'getOrders', ''),
 			'requestMethod' => 'POST',
 			'inputSchema' => [
 				'type' => 'object',
@@ -227,7 +238,7 @@ class Backend extends \Opencart\System\Engine\Controller {
 		$data['result']['tools']['getOrderStatuses'] = [
 			'name' => 'getOrderStatuses',
 			'description' => 'Get information about order statuses',
-			'endpoint' => $this->url->link('extension/stable/backend/getOrderStatuses', ''),
+			'endpoint' => $this->url->link('extension/stable/stable/backend' . $this->separator . 'getOrderStatuses', ''),
 			'requestMethod' => 'POST',
 			'inputSchema' => [
 				'type' => 'object',
@@ -241,7 +252,7 @@ class Backend extends \Opencart\System\Engine\Controller {
 		$data['result']['tools']['getCountries'] = [
 			'name' => 'getCountries',
 			'description' => 'Get information about countries',
-			'endpoint' => $this->url->link('extension/stable/backend/getCountries', ''),
+			'endpoint' => $this->url->link('extension/stable/stable/backend' . $this->separator . 'getCountries', ''),
 			'requestMethod' => 'POST',
 			'inputSchema' => [
 				'type' => 'object',
@@ -255,7 +266,7 @@ class Backend extends \Opencart\System\Engine\Controller {
 		$data['result']['tools']['getZonesByCountryId'] = [
 			'name' => 'getZonesByCountryId',
 			'description' => 'Get information about zones for this country ID',
-			'endpoint' => $this->url->link('extension/stable/backend/getZonesByCountryId', ''),
+			'endpoint' => $this->url->link('extension/stable/stable/backend' . $this->separator . 'getZonesByCountryId', ''),
 			'requestMethod' => 'POST',
 			'inputSchema' => [
 				'type' => 'object',
@@ -1302,7 +1313,7 @@ class Backend extends \Opencart\System\Engine\Controller {
 			
 			if ($chat) {
 				if ($this->validateToolPermission('order')) {
-					$this->model_extension_stable_stable_backende->refreshStartup($chat);
+					$this->model_extension_stable_stable_backend->refreshStartup($chat);
 							
 					$order_statuses = $this->model_extension_stable_stable_backend->getOrderStatuses();
 				

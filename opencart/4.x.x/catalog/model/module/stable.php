@@ -170,7 +170,7 @@ class Stable extends \Opencart\System\Engine\Model {
 		$setting = array_replace_recursive((array)$config_setting, (array)$this->config->get('module_stable_setting'));
 		
 		if ($setting['debug_status']) {
-			$log = new Log('stable.log');
+			$log = new \Opencart\System\Library\Log('stable.log');
 			
 			$log->write("Stable debug (" . $action_code . ")" . "\n" . "Input data: " . json_encode($input_data) . "\n" . "Output data: " . json_encode($output_data));
 		}

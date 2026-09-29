@@ -103,21 +103,21 @@ $_['stable_setting'] = [
 					'type' => 'string',
 					'required' => true,
 					'name' => 'Card Expiry Date Month',
-					'description' => 'Card Expiry Month, 2 digits as a string ("01".."12"]. Required only by the payment methods that list it in required_fields.'
+					'description' => 'Card Expiry Month, 2 digits as a string ("01".."12"). Required only by the payment methods that list it in required_fields.'
 				],
 				'cc_expire_date_year' => [
 					'code' => 'cc_expire_date_year',
 					'type' => 'string',
 					'required' => true,
 					'name' => 'Card Expiry Date Year',
-					'description' => 'Card Expiry Year, 4 digits as a string ("2029"]. Required only by the payment methods that list it in required_fields.'
+					'description' => 'Card Expiry Year, 4 digits as a string ("2029"). Required only by the payment methods that list it in required_fields.'
 				],
 				'cc_cvv2' => [
 					'code' => 'cc_cvv2',
 					'type' => 'string',
 					'required' => true,
-					'name' => 'Card Security Code (CVV2]',
-					'description' => 'Card Security Code (CVV2], 3-4 digits as a string so leading zeros survive. Required only by the payment methods that list it in required_fields.'
+					'name' => 'Card Security Code (CVV2)',
+					'description' => 'Card Security Code (CVV2), 3-4 digits as a string so leading zeros survive. Required only by the payment methods that list it in required_fields.'
 				]
 			]
 		],
@@ -144,25 +144,25 @@ $_['stable_setting'] = [
 					'type' => 'string',
 					'required' => true,
 					'name' => 'Card Expiry Date Month',
-					'description' => 'Card Expiry Month, 2 digits as a string ("01".."12"]. Required only by the payment methods that list it in required_fields.'
+					'description' => 'Card Expiry Month, 2 digits as a string ("01".."12"). Required only by the payment methods that list it in required_fields.'
 				],
 				'cc_expire_date_year' => [
 					'code' => 'cc_expire_date_year',
 					'type' => 'string',
 					'required' => true,
 					'name' => 'Card Expiry Date Year',
-					'description' => 'Card Expiry Year, 4 digits as a string ("2029"]. Required only by the payment methods that list it in required_fields.'
+					'description' => 'Card Expiry Year, 4 digits as a string ("2029"). Required only by the payment methods that list it in required_fields.'
 				],
 				'cc_cvv2' => [
 					'code' => 'cc_cvv2',
 					'type' => 'string',
 					'required' => true,
-					'name' => 'Card Security Code (CVV2]',
-					'description' => 'Card Security Code (CVV2], 3-4 digits as a string so leading zeros survive. Required only by the payment methods that list it in required_fields.'
+					'name' => 'Card Security Code (CVV2)',
+					'description' => 'Card Security Code (CVV2), 3-4 digits as a string so leading zeros survive. Required only by the payment methods that list it in required_fields.'
 				]
 			]
 		],
-		// No cc_owner: web_payment_software's send(] never reads it.
+		// No cc_owner: web_payment_software's send() never reads it.
 		'web_payment_software' => [
 			'code' => 'web_payment_software',
 			'flow' => 'send',
@@ -179,26 +179,26 @@ $_['stable_setting'] = [
 					'type' => 'string',
 					'required' => true,
 					'name' => 'Card Expiry Date Month',
-					'description' => 'Card Expiry Month, 2 digits as a string ("01".."12"]. Required only by the payment methods that list it in required_fields.'
+					'description' => 'Card Expiry Month, 2 digits as a string ("01".."12"). Required only by the payment methods that list it in required_fields.'
 				],
 				'cc_expire_date_year' => [
 					'code' => 'cc_expire_date_year',
 					'type' => 'string',
 					'required' => true,
 					'name' => 'Card Expiry Date Year',
-					'description' => 'Card Expiry Year, 4 digits as a string ("2029"]. Required only by the payment methods that list it in required_fields.'
+					'description' => 'Card Expiry Year, 4 digits as a string ("2029"). Required only by the payment methods that list it in required_fields.'
 				],
 				'cc_cvv2' => [
 					'code' => 'cc_cvv2',
 					'type' => 'string',
 					'required' => true,
-					'name' => 'Card Security Code (CVV2]',
-					'description' => 'Card Security Code (CVV2], 3-4 digits as a string so leading zeros survive. Required only by the payment methods that list it in required_fields.'
+					'name' => 'Card Security Code (CVV2)',
+					'description' => 'Card Security Code (CVV2), 3-4 digits as a string so leading zeros survive. Required only by the payment methods that list it in required_fields.'
 				]
 			]
 		],
-		// Start-date fields are optional: only some cards (legacy UK Maestro/Switch]
-		// carry one, and the extension reads them without an isset(] guard. Untested
+		// Start-date fields are optional: only some cards (legacy UK Maestro/Switch)
+		// carry one, and the extension reads them without an isset() guard. Untested
 		// against a live gateway — the first real order through it needs watching.
 		'perpetual_payments' => [
 			'code' => 'perpetual_payments',
@@ -216,39 +216,39 @@ $_['stable_setting'] = [
 					'type' => 'string',
 					'required' => true,
 					'name' => 'Card Expiry Date Month',
-					'description' => 'Card Expiry Month, 2 digits as a string ("01".."12"]. Required only by the payment methods that list it in required_fields.'
+					'description' => 'Card Expiry Month, 2 digits as a string ("01".."12"). Required only by the payment methods that list it in required_fields.'
 				],
 				'cc_expire_date_year' => [
 					'code' => 'cc_expire_date_year',
 					'type' => 'string',
 					'required' => true,
 					'name' => 'Card Expiry Date Year',
-					'description' => 'Card Expiry Year, 4 digits as a string ("2029"]. Required only by the payment methods that list it in required_fields.'
+					'description' => 'Card Expiry Year, 4 digits as a string ("2029"). Required only by the payment methods that list it in required_fields.'
 				],
 				'cc_cvv2' => [
 					'code' => 'cc_cvv2',
 					'type' => 'string',
 					'required' => true,
-					'name' => 'Card Security Code (CVV2]',
-					'description' => 'Card Security Code (CVV2], 3-4 digits as a string so leading zeros survive. Required only by the payment methods that list it in required_fields.'
+					'name' => 'Card Security Code (CVV2)',
+					'description' => 'Card Security Code (CVV2), 3-4 digits as a string so leading zeros survive. Required only by the payment methods that list it in required_fields.'
 				],
 				'cc_start_date_month' => [
 					'code' => 'cc_start_date_month',
 					'type' => 'string',
 					'required' => false,
 					'name' => 'Card Start Date Month',
-					'description' => 'Card Start Month, 2 digits as a string ("01".."12"]. Only a few card types carry a start date — ask the customer, and omit the field when their card has none. Never invent one.'
+					'description' => 'Card Start Month, 2 digits as a string ("01".."12"). Only a few card types carry a start date — ask the customer, and omit the field when their card has none. Never invent one.'
 				],
 				'cc_start_date_year' => [
 					'code' => 'cc_start_date_year',
 					'type' => 'string',
 					'required' => false,
 					'name' => 'Card Start Date Year',
-					'description' => 'Card Start Year, 4 digits as a string ("2024"]. Only a few card types carry a start date — ask the customer, and omit the field when their card has none. Never invent one.'
+					'description' => 'Card Start Year, 4 digits as a string ("2024"). Only a few card types carry a start date — ask the customer, and omit the field when their card has none. Never invent one.'
 				]
 			]
 		],
-		// Uses cc_name rather than cc_owner, and its send(] does not read the expiry
+		// Uses cc_name rather than cc_owner, and its send() does not read the expiry
 		// date at all. cc_choice picks a stored card and defaults to "new" when absent.
 		// Untested against a live gateway.
 		'firstdata_remote' => [
@@ -273,8 +273,8 @@ $_['stable_setting'] = [
 					'code' => 'cc_cvv2',
 					'type' => 'string',
 					'required' => true,
-					'name' => 'Card Security Code (CVV2]',
-					'description' => 'Card Security Code (CVV2], 3-4 digits as a string so leading zeros survive. Required only by the payment methods that list it in required_fields.'
+					'name' => 'Card Security Code (CVV2)',
+					'description' => 'Card Security Code (CVV2), 3-4 digits as a string so leading zeros survive. Required only by the payment methods that list it in required_fields.'
 				],
 				'cc_choice' => [
 					'code' => 'cc_choice',

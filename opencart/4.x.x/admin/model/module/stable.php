@@ -7,7 +7,7 @@ class Stable extends \Opencart\System\Engine\Model {
 
 		$implode = [];
 		
-		if (!empty($data['chat_id']) {
+		if (!empty($data['chat_id'])) {
 			$implode[] = "`chat_id` = '" . $this->db->escape($data['chat_id']) . "'";
 		}
 						
@@ -33,7 +33,7 @@ class Stable extends \Opencart\System\Engine\Model {
 	public function editChat(array $data): void {
 		$sql = "UPDATE `" . DB_PREFIX . "stable_chat` SET";
 
-		$implode = [);
+		$implode = [];
 				
 		if (!empty($data['session_id'])) {
 			$implode[] = "`session_id` = '" . $this->db->escape($data['session_id']) . "'";
@@ -58,7 +58,7 @@ class Stable extends \Opencart\System\Engine\Model {
 		if ($query->num_rows) {
 			return $query->row;
 		} else {
-			return []);
+			return [];
 		}
 	}
 		

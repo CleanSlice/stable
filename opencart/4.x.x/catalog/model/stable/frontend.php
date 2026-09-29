@@ -50,8 +50,8 @@ class Frontend extends \Opencart\System\Engine\Model {
 			} else{						
 				$language = new \Opencart\System\Library\Language($language_info['code']);
 				
-				if (!empty($language_info[$code]['extension'])) {
-					$language->addPath(DIR_EXTENSION . $language_data[$code]['extension'] . '/catalog/language/');
+				if (!empty($language_info['extension'])) {
+					$language->addPath(DIR_EXTENSION . $language_info['extension'] . '/catalog/language/');
 				} else {
 					$language->addPath(DIR_LANGUAGE);
 				}
@@ -683,7 +683,7 @@ class Frontend extends \Opencart\System\Engine\Model {
 				'date_added'              => $customer_query->row['date_added']
 			];
 		} else {
-			return;
+			return false;
 		}
 	}
 				
@@ -863,7 +863,7 @@ class Frontend extends \Opencart\System\Engine\Model {
 				'date_modified'           => $order_query->row['date_modified']
 			];
 		} else {
-			return;
+			return false;
 		}
 	}
 	
@@ -1009,7 +1009,7 @@ class Frontend extends \Opencart\System\Engine\Model {
 				'date_modified'           => $order_query->row['date_modified']
 			];
 		} else {
-			return;
+			return false;
 		}
 	}
 	
@@ -1106,7 +1106,7 @@ class Frontend extends \Opencart\System\Engine\Model {
 		$this->product_statement['review'] = "(SELECT COUNT(*) FROM `" . DB_PREFIX . "review` `r` WHERE `r`.`product_id` = `p`.`product_id` AND `r`.`status` = '1' GROUP BY `r`.`product_id`) AS `reviews`";
 		$this->product_statement['weight_class'] = "(SELECT `wcd`.`unit` FROM `" . DB_PREFIX . "weight_class_description` `wcd` WHERE `p`.`weight_class_id` = `wcd`.`weight_class_id` AND `wcd`.`language_id` = '" . (int)$this->config->get('config_language_id') . "') AS `weight_class`";
 		$this->product_statement['length_class'] = "(SELECT `lcd`.`unit` FROM `" . DB_PREFIX . "length_class_description` `lcd` WHERE `p`.`length_class_id` = `lcd`.`length_class_id` AND `lcd`.`language_id` = '" . (int)$this->config->get('config_language_id') . "') AS length_class";
-		$this->product_statement['tax_class'] = "(SELECT `lcd`.`title` FROM `" . DB_PREFIX . "tax_class` `tc` WHERE `p`.`tax_class_id` = `tc`.`tax_class_id`) AS tax_class";
+		$this->product_statement['tax_class'] = "(SELECT `tc`.`title` FROM `" . DB_PREFIX . "tax_class` `tc` WHERE `p`.`tax_class_id` = `tc`.`tax_class_id`) AS tax_class";
 		
 		if (version_compare((string)VERSION, '4.0.2.0', '>=')) {
 			$this->product_statement['rating'] = "p.rating";

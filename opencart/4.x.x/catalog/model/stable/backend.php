@@ -43,8 +43,8 @@ class Backend extends \Opencart\System\Engine\Model {
 			} else{						
 				$language = new \Opencart\System\Library\Language($language_info['code']);
 				
-				if (!empty($language_info[$code]['extension'])) {
-					$language->addPath(DIR_EXTENSION . $language_data[$code]['extension'] . '/admin/language/');
+				if (!empty($language_info['extension'])) {
+					$language->addPath(DIR_EXTENSION . $language_info['extension'] . '/admin/language/');
 				} else {
 					$language->addPath(DIR_LANGUAGE);
 				}
@@ -100,7 +100,7 @@ class Backend extends \Opencart\System\Engine\Model {
 				'meta_description' 	=> $query->row['meta_description'],
 				'meta_keyword'     	=> $query->row['meta_keyword'],
 				'image'				=> $image,
-				'parent_id' 		=> $query->row['parent_id'],
+				'parent_category_id' => $query->row['parent_id'],
 				'sort_order'  		=> $query->row['sort_order'],
 				'status'  			=> $query->row['status'],
 				'date_added'        => $query->row['date_added'],
@@ -649,7 +649,7 @@ class Backend extends \Opencart\System\Engine\Model {
 				'date_added'              => $customer_query->row['date_added']
 			];
 		} else {
-			return;
+			return false;
 		}
 	}
 				
@@ -943,7 +943,7 @@ class Backend extends \Opencart\System\Engine\Model {
 				'date_modified'           => $order_query->row['date_modified']
 			];
 		} else {
-			return;
+			return false;
 		}
 	}
 	
@@ -1077,7 +1077,7 @@ class Backend extends \Opencart\System\Engine\Model {
 		if (version_compare((string)VERSION, '4.1.0.1', '>=')) {
 			$sql = "SELECT * FROM `" . DB_PREFIX . "country` `c` LEFT JOIN `" . DB_PREFIX . "country_description` `cd` ON (`c`.`country_id` = `cd`.`country_id`) WHERE `cd`.`language_id` = '" . (int)$this->config->get('config_language_id') . "' ORDER BY `cd`.`name` ASC";
 		} else {
-			$sql = "SELECT * FROM `" . DB_PREFIX . "country` WHERE ORDER BY `name` ASC";
+			$sql = "SELECT * FROM `" . DB_PREFIX . "country` ORDER BY `name` ASC";
 		}
 		
 		$key = md5($sql);
@@ -1097,7 +1097,7 @@ class Backend extends \Opencart\System\Engine\Model {
 	
 	public function getZonesByCountryId(int $country_id): array {
 		if (version_compare((string)VERSION, '4.1.0.1', '>=')) {
-			$sql = "SELECT * FROM `" . DB_PREFIX . "zone` `z` LEFT JOIN `" . DB_PREFIX . "zone_description` `zd` ON (`z`.`zone_id` = `zd`.`zone_id`) WHERE `z`.`country_id` = '" . (int)$country_id . "' AND `zd`.`language_id` = '" . (int)$this->config->get('config_language_id') . "' AND ORDER BY `zd`.`name`";
+			$sql = "SELECT * FROM `" . DB_PREFIX . "zone` `z` LEFT JOIN `" . DB_PREFIX . "zone_description` `zd` ON (`z`.`zone_id` = `zd`.`zone_id`) WHERE `z`.`country_id` = '" . (int)$country_id . "' AND `zd`.`language_id` = '" . (int)$this->config->get('config_language_id') . "' ORDER BY `zd`.`name`";
 		} else {
 			$sql = "SELECT * FROM `" . DB_PREFIX . "zone` WHERE `country_id` = '" . (int)$country_id . "' ORDER BY `name`";
 		}
@@ -1134,7 +1134,7 @@ class Backend extends \Opencart\System\Engine\Model {
 		$this->product_statement['review'] = "(SELECT COUNT(*) FROM `" . DB_PREFIX . "review` `r` WHERE `r`.`product_id` = `p`.`product_id` AND `r`.`status` = '1' GROUP BY `r`.`product_id`) AS `reviews`";
 		$this->product_statement['weight_class'] = "(SELECT `wcd`.`unit` FROM `" . DB_PREFIX . "weight_class_description` `wcd` WHERE `p`.`weight_class_id` = `wcd`.`weight_class_id` AND `wcd`.`language_id` = '" . (int)$this->config->get('config_language_id') . "') AS `weight_class`";
 		$this->product_statement['length_class'] = "(SELECT `lcd`.`unit` FROM `" . DB_PREFIX . "length_class_description` `lcd` WHERE `p`.`length_class_id` = `lcd`.`length_class_id` AND `lcd`.`language_id` = '" . (int)$this->config->get('config_language_id') . "') AS length_class";
-		$this->product_statement['tax_class'] = "(SELECT `lcd`.`title` FROM `" . DB_PREFIX . "tax_class` `tc` WHERE `p`.`tax_class_id` = `tc`.`tax_class_id`) AS tax_class";
+		$this->product_statement['tax_class'] = "(SELECT `tc`.`title` FROM `" . DB_PREFIX . "tax_class` `tc` WHERE `p`.`tax_class_id` = `tc`.`tax_class_id`) AS tax_class";
 		
 		if (version_compare((string)VERSION, '4.0.2.0', '>=')) {
 			$this->product_statement['rating'] = "p.rating";

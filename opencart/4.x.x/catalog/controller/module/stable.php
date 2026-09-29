@@ -1,6 +1,17 @@
 <?php
 namespace Opencart\Catalog\Controller\Extension\Stable\Module;
 class Stable extends \Opencart\System\Engine\Controller {
+	private $separator = '';
+	
+	public function __construct($registry) {
+        parent::__construct($registry);
+
+		if (version_compare((string)VERSION, '4.0.2.0', '>=')) {
+			$this->separator = '.';
+		} else {
+			$this->separator = '|';
+		}
+    }
 									
 	public function content_top_before(string $route, array &$data): void {					
 		$_config = new \Opencart\System\Engine\Config();
