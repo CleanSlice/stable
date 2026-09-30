@@ -1,5 +1,5 @@
 ---
-name: stable-opencart-backend
+name: stable-opencart3-backend
 description: The only way to read this OpenCart store's admin data — look up categories, manufacturers, products, customers, customer groups, orders, order statuses, countries and zones. Every search tool filters, sorts and pages server-side — by name, model, brand, category, price, stock, status, email, customer group, order status, order total or date range. Read-only — no tool here creates or changes a record. Every tool is POST with a JSON body to the Stable API URL from the integrator context; admin pages, route= URLs and SQL are not alternatives and do not work. Load before answering anything about the catalog, customers, or orders.
 metadata:
   always: true
@@ -322,7 +322,7 @@ Content-Type: application/json
 `category_id`, `name`, `description`, `meta_title`, `meta_description`, `meta_keyword`, `image`, `parent_category_id`, `sort_order`, `status`, `date_added`, `date_modified`
 
 ### Product fields
-`product_id`, `name`, `description`, `meta_title`, `meta_description`, `meta_keyword`, `tag`, `model`, `sku`, `upc`, `ean`, `jan`, `isbn`, `mpn`, `location`, `quantity`, `image`, `manufacturer_id`, `manufacturer`, `categories_id` (comma-separated), `options` (array of option groups with values/prices), `subscriptions` (subscription plans; each carries `subscription_plan_id` and `name`), `price` (formatted, discount-aware), `special` (formatted special price), `discount` (formatted quantity-1 discount), `reward`, `points`, `tax_class_id`, `tax_class` (the tax class title), `date_available`, `weight`/`weight_class_id`/`weight_class` (unit), `length`/`width`/`height`/`length_class_id`/`length_class` (unit), `subtract`, `rating` (rounded average), `reviews` (count), `minimum`, `sort_order`, `status`, `date_added`, `date_modified`, `href` (storefront link)
+`product_id`, `name`, `description`, `meta_title`, `meta_description`, `meta_keyword`, `tag`, `model`, `sku`, `upc`, `ean`, `jan`, `isbn`, `mpn`, `location`, `quantity`, `image`, `manufacturer_id`, `manufacturer`, `categories_id` (comma-separated), `options` (array of option groups with values/prices), `recurrings` (recurring payment profiles), `price` (formatted, discount-aware), `special` (formatted special price), `discount` (formatted quantity-1 discount), `reward`, `points`, `tax_class_id`, `tax_class` (the tax class title), `date_available`, `weight`/`weight_class_id`/`weight_class` (unit), `length`/`width`/`height`/`length_class_id`/`length_class` (unit), `subtract`, `rating` (rounded average), `reviews` (count), `minimum`, `sort_order`, `status`, `date_added`, `date_modified`, `viewed`, `href` (storefront link)
 
 ### Manufacturer fields
 `manufacturer_id`, `name`, `image`, `sort_order`

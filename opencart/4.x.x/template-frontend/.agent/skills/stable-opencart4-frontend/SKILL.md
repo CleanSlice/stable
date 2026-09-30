@@ -1,5 +1,5 @@
 ---
-name: stable-opencart-frontend
+name: stable-opencart4-frontend
 description: The only way to reach this OpenCart storefront — search and sort the catalog by name, model, brand, category, price, stock or date, look up manufacturers, read product and category detail, check the logged-in customer's profile and past orders, add / change quantity / remove cart lines, list shipping and payment methods, and place a real order. Every tool is POST with a JSON body to the Stable API URL from the integrator context; storefront pages, route= URLs and hand-written forms are not alternatives and do not work. Load before answering anything about products, prices, stock, the cart, checkout or orders.
 metadata:
   always: true

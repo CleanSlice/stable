@@ -1,16 +1,16 @@
 apiVersion: ranch/v1
 kind: AgentTemplate
 metadata:
-  id: template-86df834d-5de1-4875-ba6e-da6e3fd5da66
-  name: Stable OpenCart Backend
+  id: template-152d1858-ac70-4a29-9d55-fc3659b0b9c1
+  name: Stable OpenCart 3 Backend
   version: 0.0.0
-  description: Stable module agent for convenient work of Opencart users in the backend
+  description: Stable module agent for convenient work of Opencart 3 users in the backend
 files:
   agent: ./.agent
   paddock: ./.paddock
 skills:
-  - id: stable-opencart-backend
-    source: ./.agent/skills/stable-opencart-backend
+  - id: stable-opencart3-backend
+    source: ./.agent/skills/stable-opencart3-backend
 mcp: []
 secrets: []
 paddock:

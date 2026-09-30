@@ -1,16 +1,17 @@
 apiVersion: ranch/v1
 kind: AgentTemplate
 metadata:
-  id: template-9e6c1421-be9c-4cc0-9758-d7365549299f
-  name: Stable OpenCart Frontend
+  id: template-859968c4-fff8-4a3c-8c5d-55322c5aa77f
+  name: Stable OpenCart 4 Frontend
   version: 0.0.0
-  description: Stable module agent for convenient work of Opencart customers in the frontend
+  description: Stable module agent for convenient work of Opencart 4 customers in
+    the frontend
 files:
   agent: ./.agent
   paddock: ./.paddock
 skills:
-  - id: stable-opencart-frontend
-    source: ./.agent/skills/stable-opencart-frontend
+  - id: stable-opencart4-frontend
+    source: ./.agent/skills/stable-opencart4-frontend
 mcp: []
 secrets: []
 paddock:
