@@ -15,16 +15,29 @@ Comprehensive skill for browsing the catalog, managing the cart, and placing ord
 
 ## API Endpoints
 
-**Base:** `<STABLE_API_URL>/<TOOL>`
+**Base:** `<STABLE_API_URL>.<TOOL>`
+
+🚨 **Join the tool name with a dot, never a slash.** `<STABLE_API_URL>` already ends in this
+store's controller route; the tool name is the **method** on that route, and OpenCart 4
+separates route from method with `.` — it is not a path segment.
+
+- ✅ `<STABLE_API_URL>.getProduct`
+- ❌ `<STABLE_API_URL>/getProduct` — **HTTP 404**. No such page exists; nothing is retried for you.
+
+If a call ever returns 404, do **not** guess at other URL shapes. `POST` the bare
+`<STABLE_API_URL>` with `{}` as the body: it needs no arguments and returns the full tool
+list, where every tool's **`endpoint`** field is the exact, ready-to-use URL for this store.
+Copy that value verbatim. Some older OpenCart 4.0.x stores join with `|` instead of `.`, and
+`endpoint` is the only source that is always right — trust it over the sketches below.
 
 ### Transport — the same for every tool
 
 **Every tool is `POST` with a JSON body.** There are no `GET` tools, no query-string
-parameters, and no other HTTP methods. If you find yourself building a URL with `?` and
-`&`, you are calling it wrong.
+parameters of your own, and no other HTTP methods. The base URL already carries its own
+`?route=…`; never append further `?` or `&` parameters, and never move tool arguments there.
 
 ```
-POST <STABLE_API_URL>/<TOOL>
+POST <STABLE_API_URL>.<TOOL>
 Content-Type: application/json
 {"chat_id": "<CHAT_ID>", ...tool arguments...}
 ```
@@ -41,7 +54,7 @@ server other than this API.
 
 | Param | What to pass |
 |---|---|
-| `url` | `<STABLE_API_URL>` + `/` + the tool name. Must be absolute — starts with `https://`. |
+| `url` | `<STABLE_API_URL>` + `.` + the tool name — a **dot**, not a slash. Must be absolute — starts with `https://`. |
 | `method` | `"POST"` — always, for every tool here. |
 | `headers` | `{"Content-Type": "application/json"}` |
 | `body` | The arguments object **serialized to a JSON string** — not an object. |
@@ -50,15 +63,18 @@ Worked example. To run the `getProducts` sketch, call `http` with:
 
 ```json
 {
-  "url": "<STABLE_API_URL>/getProducts",
+  "url": "<STABLE_API_URL>.getProducts",
   "method": "POST",
   "headers": {"Content-Type": "application/json"},
   "body": "{\"chat_id\":\"<CHAT_ID>\",\"name\":\"hoodie\"}"
 }
 ```
 
-Three mistakes that kill the call before it ever leaves the runtime:
+Four mistakes that waste a call:
 
+- **A slash before the tool name.** `<STABLE_API_URL>/getProducts` is **HTTP 404** — the store
+  has no such page. It is `<STABLE_API_URL>.getProducts`, with a dot. This is the single most
+  common way to lose a request here, and a 404 never means the tool or the product is missing.
 - **`body` passed as an object.** It is a string parameter. Serialize it. A nested object
   is rejected outright, and the rejection is not a store error — the request never went.
 - **A relative `url`.** `/index.php?route=...` is not accepted. Use the full `<STABLE_API_URL>`
@@ -108,6 +124,12 @@ is a **string** containing the JSON envelope below.
 - **HTTP 400 means the action did NOT happen.** Nothing was added, changed, or ordered.
   Never describe a 400 response as a success.
 
+**Bad URL — HTTP 404:** the `body` is an HTML error page, not a JSON envelope. This is never
+a data problem and never means the product or order is absent — it means the URL was
+malformed, almost always a `/` where a `.` belongs before the tool name. Correct the URL and
+repeat the *same* call. Like a 400, a 404 means the action did not happen — but unlike a 400,
+nothing was wrong with your arguments, so do not change them and do not switch tools.
+
 ### Authentication
 
 - Every call requires `chat_id` — a session identifier automatically issued once the customer is logged in the storefront.
@@ -135,7 +157,7 @@ If a group is disabled for the store, its tools return `You do not have permissi
 
 ### `getCategory`
 ```
-POST <STABLE_API_URL>/getCategory
+POST <STABLE_API_URL>.getCategory
 Content-Type: application/json
 {"chat_id": "<CHAT_ID>", "category_id": <CATEGORY_ID>}
 ```
@@ -145,7 +167,7 @@ Content-Type: application/json
 
 ### `getCategories`
 ```
-POST <STABLE_API_URL>/getCategories
+POST <STABLE_API_URL>.getCategories
 Content-Type: application/json
 {"chat_id": "<CHAT_ID>", "name": "", "parent_category_id": 0, "sort": "sort_order", "order": "ASC", "page": 1}
 ```
@@ -156,7 +178,7 @@ Content-Type: application/json
 
 ### `getManufacturer`
 ```
-POST <STABLE_API_URL>/getManufacturer
+POST <STABLE_API_URL>.getManufacturer
 Content-Type: application/json
 {"chat_id": "<CHAT_ID>", "manufacturer_id": <MANUFACTURER_ID>}
 ```
@@ -166,7 +188,7 @@ Content-Type: application/json
 
 ### `getManufacturers`
 ```
-POST <STABLE_API_URL>/getManufacturers
+POST <STABLE_API_URL>.getManufacturers
 Content-Type: application/json
 {"chat_id": "<CHAT_ID>", "name": "", "sort": "name", "order": "ASC", "page": 1}
 ```
@@ -179,7 +201,7 @@ Use this to turn a brand the customer names into a `manufacturer_id`, then pass 
 
 ### `getProduct`
 ```
-POST <STABLE_API_URL>/getProduct
+POST <STABLE_API_URL>.getProduct
 Content-Type: application/json
 {"chat_id": "<CHAT_ID>", "product_id": <PRODUCT_ID>}
 ```
@@ -189,7 +211,7 @@ Content-Type: application/json
 
 ### `getProducts`
 ```
-POST <STABLE_API_URL>/getProducts
+POST <STABLE_API_URL>.getProducts
 Content-Type: application/json
 {"chat_id": "<CHAT_ID>", "name": "hoodie", "category_id": 0, "price_min": 25, "price_max": 99.99, "sort": "price", "order": "ASC", "page": 1}
 ```
@@ -215,7 +237,7 @@ Omit a filter to leave it out — there is no "any" value to pass. `tag` and `de
 
 ### `getCurrentCustomer`
 ```
-POST <STABLE_API_URL>/getCurrentCustomer
+POST <STABLE_API_URL>.getCurrentCustomer
 Content-Type: application/json
 {"chat_id": "<CHAT_ID>"}
 ```
@@ -225,7 +247,7 @@ Content-Type: application/json
 
 ### `getCurrentCustomerOrder`
 ```
-POST <STABLE_API_URL>/getCurrentCustomerOrder
+POST <STABLE_API_URL>.getCurrentCustomerOrder
 Content-Type: application/json
 {"chat_id": "<CHAT_ID>", "order_id": <ORDER_ID>}
 ```
@@ -235,7 +257,7 @@ Content-Type: application/json
 
 ### `getCurrentCustomerOrders`
 ```
-POST <STABLE_API_URL>/getCurrentCustomerOrders
+POST <STABLE_API_URL>.getCurrentCustomerOrders
 Content-Type: application/json
 {"chat_id": "<CHAT_ID>", "page": 1}
 ```
@@ -246,7 +268,7 @@ Content-Type: application/json
 
 ### `addCartProduct`
 ```
-POST <STABLE_API_URL>/addCartProduct
+POST <STABLE_API_URL>.addCartProduct
 Content-Type: application/json
 {"chat_id": "<CHAT_ID>", "product_id": <PRODUCT_ID>, "quantity": 1, "option": {"10": 5}, "subscription_plan_id": 0}
 ```
@@ -258,7 +280,7 @@ Content-Type: application/json
 
 ### `editCartProduct`
 ```
-POST <STABLE_API_URL>/editCartProduct
+POST <STABLE_API_URL>.editCartProduct
 Content-Type: application/json
 {"chat_id": "<CHAT_ID>", "cart_id": <CART_ID>, "quantity": 3}
 ```
@@ -268,7 +290,7 @@ Content-Type: application/json
 
 ### `deleteCartProduct`
 ```
-POST <STABLE_API_URL>/deleteCartProduct
+POST <STABLE_API_URL>.deleteCartProduct
 Content-Type: application/json
 {"chat_id": "<CHAT_ID>", "cart_id": <CART_ID>}
 ```
@@ -277,7 +299,7 @@ Content-Type: application/json
 
 ### `getCartProducts`
 ```
-POST <STABLE_API_URL>/getCartProducts
+POST <STABLE_API_URL>.getCartProducts
 Content-Type: application/json
 {"chat_id": "<CHAT_ID>"}
 ```
@@ -288,7 +310,7 @@ Content-Type: application/json
 
 A method with no extra fields — `required_fields` came back empty, so **no** `cc_*` fields:
 ```
-POST <STABLE_API_URL>/createOrder
+POST <STABLE_API_URL>.createOrder
 Content-Type: application/json
 {
   "chat_id": "<CHAT_ID>",
@@ -302,7 +324,7 @@ Content-Type: application/json
 A card method — every field `getPaymentMethods` listed in `required_fields`, as **strings**.
 The exact set differs per method; this example shows one that asked for five:
 ```
-POST <STABLE_API_URL>/createOrder
+POST <STABLE_API_URL>.createOrder
 Content-Type: application/json
 {
   "chat_id": "<CHAT_ID>",
@@ -372,7 +394,7 @@ silently: `"01"` → `1` (gateways reject it), `"045"` → `45`, and card number
 
 ### `getShippingMethods`
 ```
-POST <STABLE_API_URL>/getShippingMethods
+POST <STABLE_API_URL>.getShippingMethods
 Content-Type: application/json
 {"chat_id": "<CHAT_ID>", "country_id": <COUNTRY_ID>, "zone_id": <ZONE_ID>}
 ```
@@ -381,7 +403,7 @@ Content-Type: application/json
 
 ### `getPaymentMethods`
 ```
-POST <STABLE_API_URL>/getPaymentMethods
+POST <STABLE_API_URL>.getPaymentMethods
 Content-Type: application/json
 {"chat_id": "<CHAT_ID>", "country_id": <COUNTRY_ID>, "zone_id": <ZONE_ID>}
 ```
@@ -431,7 +453,7 @@ Pass the returned `code` verbatim into `createOrder`'s `payment_method_code`.
 
 ### `getCountries`
 ```
-POST <STABLE_API_URL>/getCountries
+POST <STABLE_API_URL>.getCountries
 Content-Type: application/json
 {"chat_id": "<CHAT_ID>"}
 ```
@@ -440,7 +462,7 @@ Content-Type: application/json
 
 ### `getZonesByCountryId`
 ```
-POST <STABLE_API_URL>/getZonesByCountryId
+POST <STABLE_API_URL>.getZonesByCountryId
 Content-Type: application/json
 {"chat_id": "<CHAT_ID>", "country_id": <COUNTRY_ID>}
 ```
@@ -484,30 +506,30 @@ Every line below is `POST` with the shown JSON body.
 
 ### 1. Browse and add a product to the cart
 ```
-POST <STABLE_API_URL>/getProducts     {"chat_id": "<CHAT_ID>", "name": "hoodie"}
-POST <STABLE_API_URL>/getProduct      {"chat_id": "<CHAT_ID>", "product_id": <PRODUCT_ID>}   (check options[] for required ones)
-POST <STABLE_API_URL>/addCartProduct  {"chat_id": "<CHAT_ID>", "product_id": <PRODUCT_ID>, "quantity": 1, "option": {"10": 5}}
+POST <STABLE_API_URL>.getProducts     {"chat_id": "<CHAT_ID>", "name": "hoodie"}
+POST <STABLE_API_URL>.getProduct      {"chat_id": "<CHAT_ID>", "product_id": <PRODUCT_ID>}   (check options[] for required ones)
+POST <STABLE_API_URL>.addCartProduct  {"chat_id": "<CHAT_ID>", "product_id": <PRODUCT_ID>, "quantity": 1, "option": {"10": 5}}
 ```
 Then check the returned cart actually contains `<PRODUCT_ID>` before telling the customer it was added.
 
 ### 2. Review and adjust the cart
 ```
-POST <STABLE_API_URL>/getCartProducts   {"chat_id": "<CHAT_ID>"}
-POST <STABLE_API_URL>/editCartProduct   {"chat_id": "<CHAT_ID>", "cart_id": <CART_ID>, "quantity": 2}
-POST <STABLE_API_URL>/deleteCartProduct {"chat_id": "<CHAT_ID>", "cart_id": <CART_ID>}
+POST <STABLE_API_URL>.getCartProducts   {"chat_id": "<CHAT_ID>"}
+POST <STABLE_API_URL>.editCartProduct   {"chat_id": "<CHAT_ID>", "cart_id": <CART_ID>, "quantity": 2}
+POST <STABLE_API_URL>.deleteCartProduct {"chat_id": "<CHAT_ID>", "cart_id": <CART_ID>}
 ```
 
 ### 3. Full checkout flow
 ```
-POST <STABLE_API_URL>/getCurrentCustomer    {"chat_id": "<CHAT_ID>"}
-POST <STABLE_API_URL>/getCountries          {"chat_id": "<CHAT_ID>"}
-POST <STABLE_API_URL>/getZonesByCountryId   {"chat_id": "<CHAT_ID>", "country_id": <COUNTRY_ID>}
-POST <STABLE_API_URL>/getShippingMethods    {"chat_id": "<CHAT_ID>", "country_id": <COUNTRY_ID>, "zone_id": <ZONE_ID>}
-POST <STABLE_API_URL>/getPaymentMethods     {"chat_id": "<CHAT_ID>", "country_id": <COUNTRY_ID>, "zone_id": <ZONE_ID>}
+POST <STABLE_API_URL>.getCurrentCustomer    {"chat_id": "<CHAT_ID>"}
+POST <STABLE_API_URL>.getCountries          {"chat_id": "<CHAT_ID>"}
+POST <STABLE_API_URL>.getZonesByCountryId   {"chat_id": "<CHAT_ID>", "country_id": <COUNTRY_ID>}
+POST <STABLE_API_URL>.getShippingMethods    {"chat_id": "<CHAT_ID>", "country_id": <COUNTRY_ID>, "zone_id": <ZONE_ID>}
+POST <STABLE_API_URL>.getPaymentMethods     {"chat_id": "<CHAT_ID>", "country_id": <COUNTRY_ID>, "zone_id": <ZONE_ID>}
 ```
 Recap items, address, chosen shipping/payment with the customer, then:
 ```
-POST <STABLE_API_URL>/createOrder
+POST <STABLE_API_URL>.createOrder
 {
   "chat_id": "<CHAT_ID>",
   "country_id": <COUNTRY_ID>, "zone_id": <ZONE_ID>,
@@ -519,8 +541,8 @@ POST <STABLE_API_URL>/createOrder
 
 ### 4. Check past orders
 ```
-POST <STABLE_API_URL>/getCurrentCustomerOrders {"chat_id": "<CHAT_ID>", "page": 1}
-POST <STABLE_API_URL>/getCurrentCustomerOrder  {"chat_id": "<CHAT_ID>", "order_id": <ORDER_ID>}
+POST <STABLE_API_URL>.getCurrentCustomerOrders {"chat_id": "<CHAT_ID>", "page": 1}
+POST <STABLE_API_URL>.getCurrentCustomerOrder  {"chat_id": "<CHAT_ID>", "order_id": <ORDER_ID>}
 ```
 
 ---

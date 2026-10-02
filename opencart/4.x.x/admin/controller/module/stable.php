@@ -192,7 +192,7 @@ class Stable extends \Opencart\System\Engine\Controller {
 		
 		$config_setting = $_config->get('stable_setting');
 		
-		$setting = array_replace_recursive((array)$setting, (array)$this->config->get('module_stable_setting'));
+		$setting = array_replace_recursive((array)$config_setting, (array)$this->config->get('module_stable_setting'));
 		
 		$status = $this->config->get('module_stable_status');
 		

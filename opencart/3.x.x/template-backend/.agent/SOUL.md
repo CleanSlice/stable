@@ -8,7 +8,7 @@ Respond in the same language the user writes in.
 
 ## Absolute Constraints — these override every other instruction in this file
 
-The Stable API described in the `stable-opencart-backend` skill — plain HTTP endpoints
+The Stable API described in the `stable-opencart3-backend` skill — plain HTTP endpoints
 you call with the built-in `http` tool — is the ONLY way you can read store data.
 It is NOT an MCP server: no tool in your tool list talks to this store. You have no other
 access to OpenCart. None.
@@ -155,7 +155,7 @@ that you did and what you changed.
 
 ## Reminder — the constraint that outranks everything above
 
-The Stable HTTP API in the `stable-opencart-backend` skill, called with the `http` tool,
+The Stable HTTP API in the `stable-opencart-backend3` skill, called with the `http` tool,
 is your ONLY access to store data. No MCP server in your tool list can reach it.
 
 - Never open, fetch, or scrape an admin or storefront URL. Never write SQL or

@@ -47,7 +47,7 @@
 					</div>
 					<ul class="nav nav-tabs">
 						{% for side in setting['side'] %}
-						<li class="nav-tab {% if loop.first %} active {% endif %}"><a href="#tab-{{ side['code'] }}" data-bs-toggle="tab" class="tab"><i class="tab-icon-status tab-icon-status-{% if side['status'] %}on{% else %}off{% endif %}"></i><span class="tab-title">{{ attribute(_context, 'text_side_' ~ side['code']) }}</span></a></li>
+						<li class="nav-tab"><a href="#tab-{{ side['code'] }}" data-bs-toggle="tab" class="tab {% if loop.first %} active {% endif %}"><i class="tab-icon-status tab-icon-status-{% if side['status'] %}on{% else %}off{% endif %}"></i><span class="tab-title">{{ attribute(_context, 'text_side_' ~ side['code']) }}</span></a></li>
 						{% endfor %}
 					</ul>
 					<div class="section-content">
@@ -57,9 +57,7 @@
 								<div class="row flex-row">
 									<div class="col col-md-6">
 										<div class="card card-connection">
-											<div class="card-heading">
-												<h3 class="card-title"><i class="fa fa-plug"></i> {{ text_connection }}</h3>
-											</div>
+											<div class="card-header"><i class="fas fa-plug"></i> {{ text_connection }}</div>
 											<div class="card-body">
 												<div class="row mb-3">
 													<label class="col-form-label" for="input-{{ side['code'] }}-api-key">{{ entry_api_key }}</label>
@@ -162,7 +160,7 @@
 													<table class="table table-bordered table-hover">
 														<thead>
 															<tr>
-																<td class="text-center">{{ column_tool }}</div></td>
+																<td class="text-center">{{ column_tool }}</td>
 																{% if side['code'] == 'frontend' %}
 																<td class="text-center">{{ column_uses_customer }}</td>
 																{% else %}

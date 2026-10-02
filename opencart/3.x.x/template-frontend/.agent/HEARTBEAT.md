@@ -1,6 +1,6 @@
 # HEARTBEAT.md
 
-_Periodic checks for Stable OpenCart Frontend Specialist agent._
+_Periodic checks for Stable OpenCart 3 Frontend Specialist agent._
 
 ## Tasks
 
