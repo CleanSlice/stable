@@ -468,13 +468,22 @@ Content-Type: application/json
 
 ### Order fields
 `order_id`, `invoice_no`, `invoice_prefix`, `store_id`, `store_name`, `store_url`, `customer_id`, `customer`, `customer_group_id`, `firstname`, `lastname`, `email`, `telephone`, `custom_field`,
-`payment_firstname`…`payment_country`, `payment_iso_code_2/3`, `payment_address_format`, `payment_custom_field`, `payment_method`, `payment_code`,
-`shipping_firstname`…`shipping_country`, `shipping_iso_code_2/3`, `shipping_address_format`, `shipping_custom_field`, `shipping_method`, `shipping_code`,
+`payment_firstname`…`payment_country`, `payment_iso_code_2/3`, `payment_address_format`, `payment_custom_field`, `payment_method_title`, `payment_method_code`,
+`shipping_firstname`…`shipping_country`, `shipping_iso_code_2/3`, `shipping_address_format`, `shipping_custom_field`, `shipping_method_title`, `shipping_method_code`,
 `products` (array of order line items), `totals` (array of order total lines — sub-total, shipping, tax, total, etc.), `comment`, `total`,
 `order_status_id`, `order_status` (name), `affiliate_id`, `commission`, `language_id`, `language_code`, `currency_id`, `currency_code`, `currency_value`, `ip`, `forwarded_ip`, `user_agent`, `accept_language`, `date_added`, `date_modified`
 
+**The method the customer chose is two flat strings.** `payment_method_title` /
+`shipping_method_title` are the human labels — `"Cash On Delivery"`, `"Flat Rate"` — and those
+are the only ones to say out loud. `payment_method_code` / `shipping_method_code` are internal
+identifiers (`cod`, `flat.flat`); use one only to match against `getPaymentMethods` /
+`getShippingMethods`, whose entries carry the same `code` and `title`. Never read a code to a
+customer and never parse it apart.
+
 ### Order list item fields
-`order_id`, `firstname`, `lastname`, `order_status_id`, `order_status`, `shipping_code`, `total`, `currency_code`, `currency_value`, `date_added`, `date_modified`
+`order_id`, `firstname`, `lastname`, `order_status_id`, `order_status`, `total`, `currency_code`, `currency_value`, `date_added`, `date_modified`
+
+No payment or shipping method is included in a list row — fetch `getCurrentCustomerOrder` for those.
 
 ---
 

@@ -318,7 +318,7 @@ Content-Type: application/json
   "address_1": "123 Main St", "city": "Springfield", "postcode": "12345",
   "country_id": <COUNTRY_ID>, "zone_id": <ZONE_ID>,
   "shipping_method_code": "flat.flat",
-  "payment_method_code": "cod"
+  "payment_method_code": "cod.cod"
 }
 ```
 A card method — every field `getPaymentMethods` listed in `required_fields`, as **strings**.
@@ -340,7 +340,7 @@ Content-Type: application/json
 ```
 **Required:** `chat_id`, `payment_method_code`.
 **Also enforced by the server:** `firstname`, `lastname`, `email`, `address_1`, `city`, `postcode`, `country_id`, `zone_id` — any of these omitted are auto-filled from `getCurrentCustomer`'s profile/default address if available; only error out if still missing after that.
-**Method codes must come from the store**, not be guessed: pass through the exact `code` values returned by `getShippingMethods`/`getPaymentMethods` for the chosen country/zone.
+**Method codes must come from the store**, not be guessed: pass through the exact `code` values returned by `getShippingMethods`/`getPaymentMethods` for the chosen country/zone. Their shape differs per store — two-part on OpenCart 4.0.2+ (`cod.cod`, `flat.flat`), one-part on 4.0.0 / 4.0.1 (`cod`, `flat`) — so copy the string you were given character for character. Shortening `cod.cod` to `cod` does **not** fail loudly: the server falls back to whichever method happens to be first, and the order is placed on a method the customer never chose.
 **Pre-flight checks:** the cart must not be empty, all items must be in stock, and quantities must meet each product's `minimum`.
 **Result on success:** the full created order object (same shape as [Order fields](#order-fields)), and the server-side cart is cleared automatically.
 **Errors:** field-specific messages (e.g. `E-Mail address does not appear to be valid!`, `Your shopping cart is empty!`, `Products in cart are not in stock!`, `Shipping method required!`, `Payment method required!`).
@@ -399,7 +399,7 @@ Content-Type: application/json
 {"chat_id": "<CHAT_ID>", "country_id": <COUNTRY_ID>, "zone_id": <ZONE_ID>}
 ```
 **Required:** `chat_id`, `country_id`, `zone_id`.
-**Result:** `{"shipping_methods": { "<code>": {"code","title","text"}, ... }}` — pass a returned `code` straight into `createOrder`'s `shipping_method_code`.
+**Result:** `{"shipping_methods": { "<code>": {"code","name","text"}, ... }}` — `name` is the label to show the customer, `text` the already-formatted price. Pass a returned `code` straight into `createOrder`'s `shipping_method_code`.
 
 ### `getPaymentMethods`
 ```
@@ -414,23 +414,27 @@ the name but whether you can complete it and what it needs:
 
 ```json
 {
-  "cod": {
-    "code": "cod", "title": "Cash On Delivery",
+  "cod.cod": {
+    "code": "cod.cod", "name": "Cash On Delivery",
     "flow": "confirm", "required_fields": [], "optional_fields": []
   },
-  "authorizenet_aim": {
-    "code": "authorizenet_aim", "title": "Credit Card",
+  "authorizenet_aim.authorizenet_aim": {
+    "code": "authorizenet_aim.authorizenet_aim", "name": "Credit Card",
     "flow": "send",
     "required_fields": ["cc_owner", "cc_number", "cc_expire_date_month", "cc_expire_date_year", "cc_cvv2"],
     "optional_fields": []
   },
-  "pp_standard": {
-    "code": "pp_standard", "title": "PayPal",
+  "pp_standard.pp_standard": {
+    "code": "pp_standard.pp_standard", "name": "PayPal",
     "flow": "unsupported",
     "reason": "This method needs the customer to complete payment on the provider's site!"
   }
 }
 ```
+
+`name` is the customer-facing label — the only part of an entry you should say out loud. The
+object is keyed by the same string as its `code`, and on older 4.0.0 / 4.0.1 stores those codes
+are one-part (`cod`) rather than two-part, so read the key or `code` rather than assuming a shape.
 
 **`flow` is the first thing to read.**
 
@@ -490,13 +494,23 @@ Content-Type: application/json
 
 ### Order fields
 `order_id`, `invoice_no`, `invoice_prefix`, `store_id`, `store_name`, `store_url`, `customer_id`, `customer`, `customer_group_id`, `firstname`, `lastname`, `email`, `telephone`, `custom_field`,
-`payment_firstname`…`payment_country`, `payment_iso_code_2/3`, `payment_address_format`, `payment_custom_field`, `payment_method`, `payment_code`,
-`shipping_firstname`…`shipping_country`, `shipping_iso_code_2/3`, `shipping_address_format`, `shipping_custom_field`, `shipping_method`, `shipping_code`,
+`payment_firstname`…`payment_country`, `payment_iso_code_2/3`, `payment_address_format`, `payment_custom_field`, `payment_method_name`, `payment_method_code`,
+`shipping_firstname`…`shipping_country`, `shipping_iso_code_2/3`, `shipping_address_format`, `shipping_custom_field`, `shipping_method_name`, `shipping_method_code`,
 `products` (array of order line items), `totals` (array of order total lines — sub-total, shipping, tax, total, etc.), `comment`, `total`,
 `order_status_id`, `order_status` (name), `affiliate_id`, `commission`, `language_id`, `language_code`, `currency_id`, `currency_code`, `currency_value`, `ip`, `forwarded_ip`, `user_agent`, `accept_language`, `date_added`, `date_modified`
 
+**The method a customer chose comes back as two flat strings, never one blob.**
+`payment_method_name` / `shipping_method_name` are the human labels — `"Cash On Delivery"`,
+`"Flat Rate"` — and those are the only ones to say out loud. `payment_method_code` /
+`shipping_method_code` are internal identifiers (`cod.cod`, `flat.flat` on most stores, `cod`,
+`flat` on older 4.0.0 / 4.0.1 ones). Use a code only to match against `getPaymentMethods` /
+`getShippingMethods`; never read one to a customer, never parse it apart, never build one.
+Both pairs are plain strings on every store version — there is no object form to unwrap.
+
 ### Order list item fields
-`order_id`, `firstname`, `lastname`, `order_status_id`, `order_status`, `shipping_code`, `total`, `currency_code`, `currency_value`, `date_added`, `date_modified`
+`order_id`, `firstname`, `lastname`, `order_status_id`, `order_status`, `total`, `currency_code`, `currency_value`, `date_added`, `date_modified`
+
+No payment or shipping method is included in a list row — fetch `getCurrentCustomerOrder` for those.
 
 ---
 
@@ -534,7 +548,7 @@ POST <STABLE_API_URL>.createOrder
   "chat_id": "<CHAT_ID>",
   "country_id": <COUNTRY_ID>, "zone_id": <ZONE_ID>,
   "shipping_method_code": "flat.flat",
-  "payment_method_code": "cod"
+  "payment_method_code": "cod.cod"
 }
 ```
 (Name/email/address fields can be omitted if the logged-in customer already has them on file.)

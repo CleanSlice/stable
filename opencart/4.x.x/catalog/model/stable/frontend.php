@@ -790,6 +790,24 @@ class Frontend extends \Opencart\System\Engine\Model {
 			} else {
 				$language_code = $this->config->get('config_language');
 			}
+			
+			if (version_compare((string)VERSION, '4.0.2.0', '>=')) {
+				$payment_method = json_decode($order_query->row['payment_method'], true);
+				
+				$payment_method_name = (!empty($payment_method['name']) ? $payment_method['name'] : '');
+				$payment_method_code = (!empty($payment_method['code']) ? $payment_method['code'] : '');
+				
+				$shipping_method = json_decode($order_query->row['shipping_method'], true);
+				
+				$shipping_method_name = (!empty($shipping_method['name']) ? $shipping_method['name'] : '');
+				$shipping_method_code = (!empty($shipping_method['code']) ? $shipping_method['code'] : '');
+			} else {
+				$payment_method_name = $order_query->row['payment_method'];
+				$payment_method_code = $order_query->row['payment_code'];
+				
+				$shipping_method_name = $order_query->row['shipping_method'];
+				$shipping_method_code = $order_query->row['shipping_code'];
+			}
 		
 			return [
 				'order_id'                => $order_query->row['order_id'],
@@ -822,8 +840,8 @@ class Frontend extends \Opencart\System\Engine\Model {
 				'payment_iso_code_3'      => $payment_iso_code_3,
 				'payment_address_format'  => $order_query->row['payment_address_format'],
 				'payment_custom_field'    => json_decode($order_query->row['payment_custom_field'], true),
-				'payment_method'          => $order_query->row['payment_method'],
-				'payment_code'            => $order_query->row['payment_code'],
+				'payment_method_name'     => $payment_method_name,
+				'payment_method_code'     => $payment_method_code,
 				'shipping_firstname'      => $order_query->row['shipping_firstname'],
 				'shipping_lastname'       => $order_query->row['shipping_lastname'],
 				'shipping_company'        => $order_query->row['shipping_company'],
@@ -840,8 +858,8 @@ class Frontend extends \Opencart\System\Engine\Model {
 				'shipping_iso_code_3'     => $shipping_iso_code_3,
 				'shipping_address_format' => $order_query->row['shipping_address_format'],
 				'shipping_custom_field'   => json_decode($order_query->row['shipping_custom_field'], true),
-				'shipping_method'         => $order_query->row['shipping_method'],
-				'shipping_code'           => $order_query->row['shipping_code'],
+				'shipping_method_name'    => $shipping_method_name,
+				'shipping_method_code'    => $shipping_method_code,
 				'products'		   		  => $this->getOrderProducts($order_query->row['order_id']),
 				'totals'	   			  => $this->getOrderTotals($order_query->row['order_id']),
 				'comment'                 => $order_query->row['comment'],
@@ -876,7 +894,7 @@ class Frontend extends \Opencart\System\Engine\Model {
 			$limit = 1;
 		}
 		
-		$query = $this->db->query("SELECT o.order_id, o.firstname, o.lastname, o.order_status_id, (SELECT os.name FROM " . DB_PREFIX . "order_status os WHERE os.order_status_id = o.order_status_id AND os.language_id = '" . (int)$this->config->get('config_language_id') . "') AS order_status, o.shipping_code, o.total, o.currency_code, o.currency_value, o.date_added, o.date_modified FROM `" . DB_PREFIX . "order` o WHERE o.customer_id = '" . (int)$customer_id . "' AND o.order_status_id > '0' AND o.store_id = '" . (int)$this->config->get('config_store_id') . "' ORDER BY o.order_id DESC LIMIT " . (int)$start . "," . (int)$limit);
+		$query = $this->db->query("SELECT o.order_id, o.firstname, o.lastname, o.order_status_id, (SELECT os.name FROM " . DB_PREFIX . "order_status os WHERE os.order_status_id = o.order_status_id AND os.language_id = '" . (int)$this->config->get('config_language_id') . "') AS order_status, o.total, o.currency_code, o.currency_value, o.date_added, o.date_modified FROM `" . DB_PREFIX . "order` o WHERE o.customer_id = '" . (int)$customer_id . "' AND o.order_status_id > '0' AND o.store_id = '" . (int)$this->config->get('config_store_id') . "' ORDER BY o.order_id DESC LIMIT " . (int)$start . "," . (int)$limit);
 		
 		return $query->rows;
 	}
@@ -936,6 +954,24 @@ class Frontend extends \Opencart\System\Engine\Model {
 			} else {
 				$language_code = $this->config->get('config_language');
 			}
+			
+			if (version_compare((string)VERSION, '4.0.2.0', '>=')) {
+				$payment_method = json_decode($order_query->row['payment_method'], true);
+				
+				$payment_method_name = (!empty($payment_method['name']) ? $payment_method['name'] : '');
+				$payment_method_code = (!empty($payment_method['code']) ? $payment_method['code'] : '');
+				
+				$shipping_method = json_decode($order_query->row['shipping_method'], true);
+				
+				$shipping_method_name = (!empty($shipping_method['name']) ? $shipping_method['name'] : '');
+				$shipping_method_code = (!empty($shipping_method['code']) ? $shipping_method['code'] : '');
+			} else {
+				$payment_method_name = $order_query->row['payment_method'];
+				$payment_method_code = $order_query->row['payment_code'];
+				
+				$shipping_method_name = $order_query->row['shipping_method'];
+				$shipping_method_code = $order_query->row['shipping_code'];
+			}
 
 			return [
 				'order_id'                => $order_query->row['order_id'],
@@ -968,8 +1004,8 @@ class Frontend extends \Opencart\System\Engine\Model {
 				'payment_iso_code_3'      => $payment_iso_code_3,
 				'payment_address_format'  => $order_query->row['payment_address_format'],
 				'payment_custom_field'    => json_decode($order_query->row['payment_custom_field'], true),
-				'payment_method'          => $order_query->row['payment_method'],
-				'payment_code'            => $order_query->row['payment_code'],
+				'payment_method_name'     => $payment_method_name,
+				'payment_method_code'     => $payment_method_code,
 				'shipping_firstname'      => $order_query->row['shipping_firstname'],
 				'shipping_lastname'       => $order_query->row['shipping_lastname'],
 				'shipping_company'        => $order_query->row['shipping_company'],
@@ -986,8 +1022,8 @@ class Frontend extends \Opencart\System\Engine\Model {
 				'shipping_iso_code_3'     => $shipping_iso_code_3,
 				'shipping_address_format' => $order_query->row['shipping_address_format'],
 				'shipping_custom_field'   => json_decode($order_query->row['shipping_custom_field'], true),
-				'shipping_method'         => $order_query->row['shipping_method'],
-				'shipping_code'           => $order_query->row['shipping_code'],
+				'shipping_method_name'    => $shipping_method_name,
+				'shipping_method_code'    => $shipping_method_code,
 				'products'		   		  => $this->getOrderProducts($order_query->row['order_id']),
 				'totals'	   			  => $this->getOrderTotals($order_query->row['order_id']),
 				'comment'                 => $order_query->row['comment'],

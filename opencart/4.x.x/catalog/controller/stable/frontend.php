@@ -2240,13 +2240,13 @@ class Frontend extends \Opencart\System\Engine\Controller {
 									if (version_compare((string)VERSION, '4.0.2.0', '>=')) {
 										$method_data[$quote_data['code']] = [
 											'code' => $quote_data['code'],
-											'title' => $quote_data['name'],
+											'name' => $quote_data['name'],
 											'text' => $quote_data['text']
 										];
 									} else {
 										$method_data[$quote_data['code']] = [
 											'code' => $quote_data['code'],
-											'title' => $quote_data['title'],
+											'name' => $quote_data['title'],
 											'text' => $quote_data['text']
 										];
 									}
@@ -2358,7 +2358,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 										foreach ($methods['option'] as $option_data) {
 											$method_data[$option_data['code']] = [
 												'code' => $option_data['code'],
-												'title' => $option_data['name'],
+												'name' => $option_data['name'],
 												'flow' => $setting['payment_method'][$result['code']]['flow'],
 												'required_fields' => $required_fields,
 												'optional_fields' => $optional_fields
@@ -2368,7 +2368,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 										foreach ($methods['option'] as $option_data) {
 											$method_data[$option_data['code']] = [
 												'code' => $option_data['code'],
-												'title' => $option_data['name'],
+												'name' => $option_data['name'],
 												'flow' => 'unsupported',
 												'reason' => 'This method needs the customer to complete payment on the provider\'s site!'
 											];
@@ -2395,7 +2395,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 										
 										$method_data[$result['code']] = [
 											'code' => $method['code'],
-											'title' => $method['title'],
+											'name' => $method['title'],
 											'flow' => $setting['payment_method'][$result['code']]['flow'],
 											'required_fields' => $required_fields,
 											'optional_fields' => $optional_fields
@@ -2403,7 +2403,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 									} else {
 										$method_data[$result['code']] = [
 											'code' => $method['code'],
-											'title' => $method['title'],
+											'name' => $method['title'],
 											'flow' => 'unsupported',
 											'reason' => 'This method needs the customer to complete payment on the provider\'s site!'
 										];
