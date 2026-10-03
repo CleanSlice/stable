@@ -21,14 +21,20 @@ Comprehensive skill for browsing the catalog, managing the cart, and placing ord
 store's controller route; the tool name is the **method** on that route, and OpenCart 4
 separates route from method with `.` — it is not a path segment.
 
-- ✅ `<STABLE_API_URL>.getProduct`
-- ❌ `<STABLE_API_URL>/getProduct` — **HTTP 404**. No such page exists; nothing is retried for you.
+The only correct shape, for every tool: ✅ `<STABLE_API_URL>.getProduct`
 
-If a call ever returns 404, do **not** guess at other URL shapes. `POST` the bare
-`<STABLE_API_URL>` with `{}` as the body: it needs no arguments and returns the full tool
-list, where every tool's **`endpoint`** field is the exact, ready-to-use URL for this store.
-Copy that value verbatim. Some older OpenCart 4.0.x stores join with `|` instead of `.`, and
-`endpoint` is the only source that is always right — trust it over the sketches below.
+Substituting a slash for that dot returns **HTTP 404** — the store has no such page, and
+nothing is retried for you. Do not reason about which character to use; the dot is already
+written into every `POST` line below, so copy those lines character for character instead of
+reconstructing a URL from memory.
+
+If a call ever returns 404, do **not** guess at other URL shapes, and do not move the tool
+name into a query parameter — there is no `method` or `tool` parameter, and adding one
+changes nothing. Instead `POST` the bare `<STABLE_API_URL>` with `{}` as the body: it needs no
+arguments and returns the full tool list, where every tool's **`endpoint`** field is the exact,
+ready-to-use URL for this store. Copy that value verbatim. Some older OpenCart 4.0.x stores
+join with `|` instead of `.`, and `endpoint` is the only source that is always right — trust it
+over the sketches below.
 
 ### Transport — the same for every tool
 
@@ -72,9 +78,9 @@ Worked example. To run the `getProducts` sketch, call `http` with:
 
 Four mistakes that waste a call:
 
-- **A slash before the tool name.** `<STABLE_API_URL>/getProducts` is **HTTP 404** — the store
-  has no such page. It is `<STABLE_API_URL>.getProducts`, with a dot. This is the single most
-  common way to lose a request here, and a 404 never means the tool or the product is missing.
+- **A slash where the dot belongs.** It is `<STABLE_API_URL>.getProducts`. Replacing that dot
+  with `/` is **HTTP 404** — the store has no such page. This is the single most common way to
+  lose a request here, and a 404 never means the tool or the product is missing.
 - **`body` passed as an object.** It is a string parameter. Serialize it. A nested object
   is rejected outright, and the rejection is not a store error — the request never went.
 - **A relative `url`.** `/index.php?route=...` is not accepted. Use the full `<STABLE_API_URL>`

@@ -117,10 +117,11 @@ and report.
 - Never describe an HTTP 400 as anything but a failure. A 400 means **nothing changed**:
   nothing was added, edited, removed, or ordered.
 - An HTTP 404 also means nothing changed, but it is **not** a rejected request — it is a
-  malformed URL. The tool name joins the base URL with a **dot**, never a slash:
-  `…/stable/frontend.addCartProduct`, not `…/stable/frontend/addCartProduct`. Correct the URL
-  and repeat the same call with the same arguments. Never tell the customer a product, order
-  or cart line doesn't exist because of a 404.
+  malformed URL. The tool name joins the base URL with a **dot**, as in
+  `…/stable/frontend.addCartProduct`; a slash in that one position is what produces the 404.
+  Take the URL from the skill's `POST` line verbatim rather than assembling it yourself, then
+  repeat the same call with the same arguments. Never tell the customer a product, order or
+  cart line doesn't exist because of a 404.
 
 ---
 

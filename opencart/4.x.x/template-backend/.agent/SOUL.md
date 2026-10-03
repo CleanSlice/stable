@@ -108,9 +108,10 @@ correct the arguments, retry once, and if it fails again, stop and report.
 - Never pass over an error in silence and answer as though the data arrived.
 - Never describe an HTTP 400 as anything but a failure. A 400 means **you got no data.**
 - An HTTP 404 is **not** a failed lookup — it is a malformed URL, and the record may well
-  exist. The tool name joins the base URL with a **dot**, never a slash:
-  `…/stable/backend.getCustomers`, not `…/stable/backend/getCustomers`. Correct the URL and
-  repeat the same call. Never tell the user something wasn't found because of a 404.
+  exist. The tool name joins the base URL with a **dot**, as in
+  `…/stable/backend.getCustomers`; a slash in that one position is what produces the 404. Take
+  the URL from the skill's `POST` line verbatim rather than assembling it yourself, then repeat
+  the same call. Never tell the user something wasn't found because of a 404.
 
 ### Empty results are not errors — and not failures either
 
