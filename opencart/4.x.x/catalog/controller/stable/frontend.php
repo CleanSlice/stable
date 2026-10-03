@@ -1555,41 +1555,41 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		
 					if (empty($this->request->post['firstname'])) {
 						$this->errors[] = 'First Name required!';
-					} elseif ((utf8_strlen($this->request->post['firstname']) < 1) || (utf8_strlen($this->request->post['firstname']) > 32)) {
+					} elseif (($this->strlen($this->request->post['firstname']) < 1) || ($this->strlen($this->request->post['firstname']) > 32)) {
 						$this->errors[] = 'First Name must be between 1 and 32 characters!';
 					} 
 						
 					if (empty($this->request->post['lastname'])) {
 						$this->errors[] = 'Last Name required!';
-					} elseif ((utf8_strlen($this->request->post['lastname']) < 1) || (utf8_strlen($this->request->post['lastname']) > 32)) {
+					} elseif (($this->strlen($this->request->post['lastname']) < 1) || ($this->strlen($this->request->post['lastname']) > 32)) {
 						$this->errors[] = 'Last Name must be between 1 and 32 characters!';
 					}
 						
 					if (empty($this->request->post['email'])) {
 						$this->errors[] = 'E-Mail required!';
-					} elseif ((utf8_strlen($this->request->post['email']) > 96) || !filter_var($this->request->post['email'], FILTER_VALIDATE_EMAIL)) {
+					} elseif (($this->strlen($this->request->post['email']) > 96) || !filter_var($this->request->post['email'], FILTER_VALIDATE_EMAIL)) {
 						$this->errors[] = 'E-Mail address does not appear to be valid!';
 					}
 					
-					if (!empty($this->request->post['telephone']) && (utf8_strlen($this->request->post['telephone']) < 3) || (utf8_strlen($this->request->post['telephone']) > 32)) {
+					if (!empty($this->request->post['telephone']) && ($this->strlen($this->request->post['telephone']) < 3) || ($this->strlen($this->request->post['telephone']) > 32)) {
 						$this->errors[] = 'Telephone does not appear to be valid!';
 					}
 						
 					if (empty($this->request->post['address_1'])) {
 						$this->errors[] = 'Address 1 required!';
-					} elseif ((utf8_strlen($this->request->post['address_1']) < 3) || (utf8_strlen($this->request->post['address_1']) > 128)) {
+					} elseif (($this->strlen($this->request->post['address_1']) < 3) || ($this->strlen($this->request->post['address_1']) > 128)) {
 						$this->errors[] = 'Address 1 must be between 3 and 128 characters!';
 					} 
 					
 					if (empty($this->request->post['city'])) {
 						$this->errors[] = 'City required!';
-					} elseif ((utf8_strlen($this->request->post['city']) < 3) || (utf8_strlen($this->request->post['city']) > 128)) {
+					} elseif (($this->strlen($this->request->post['city']) < 3) || ($this->strlen($this->request->post['city']) > 128)) {
 						$this->errors[] = 'City must be between 2 and 128 characters!';
 					}
 						
 					if (empty($this->request->post['postcode'])) {
 						$this->errors[] = 'Postcode required!';
-					} elseif ((utf8_strlen($this->request->post['postcode']) < 3) || (utf8_strlen($this->request->post['postcode']) > 10)) {
+					} elseif (($this->strlen($this->request->post['postcode']) < 3) || ($this->strlen($this->request->post['postcode']) > 10)) {
 						$this->errors[] = 'Postcode must be between 2 and 10 characters!';
 					}
 									
@@ -1849,6 +1849,8 @@ class Frontend extends \Opencart\System\Engine\Controller {
 
 						$this->load->model('setting/extension');
 
+						$sort_order = [];
+						
 						$results = $this->model_setting_extension->getExtensionsByType('total');
 
 						foreach ($results as $key => $value) {
@@ -1889,6 +1891,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 						$order_data['store_id'] = $this->config->get('config_store_id');
 						$order_data['store_name'] = $this->config->get('config_name');
 						$order_data['store_url'] = $this->config->get('config_url');
+						$order_data['subscription_id'] = 0;
 														
 						$order_data['customer_id'] = $this->session->data['customer']['customer_id'];
 						$order_data['customer_group_id'] = $this->session->data['customer']['customer_group_id'];
@@ -2600,5 +2603,15 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		}
 							
 		return $permission;
+	}
+	
+	private function strlen(string $str): int {
+		if (version_compare((string)VERSION, '4.0.2.0', '>=')) {
+			return (int)oc_strlen($str);
+		} elseif (version_compare((string)VERSION, '4.0.1.0', '>=')) {
+			return (int)\Opencart\System\Helper\Utf8\strlen($str);
+		} else {
+			return (int)utf8_strlen($str);
+		}
 	}
 }

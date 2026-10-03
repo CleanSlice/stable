@@ -41,7 +41,7 @@ class Stable extends \Opencart\System\Engine\Controller {
 		];
 
 		$data['breadcrumbs'][] = [
-			'text' => $this->language->get('heading_title_main'),
+			'text' => $this->language->get('heading_title'),
 			'href' => $this->url->link('extension/stable/module/stable', 'user_token=' . $this->session->data['user_token'])
 		];
 		

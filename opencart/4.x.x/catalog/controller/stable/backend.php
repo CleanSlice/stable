@@ -1505,4 +1505,14 @@ class Backend extends \Opencart\System\Engine\Controller {
 						
 		return $permission;
 	}
+	
+	private function strlen(string $str): int {
+		if (version_compare((string)VERSION, '4.0.2.0', '>=')) {
+			return (int)oc_strlen($str);
+		} elseif (version_compare((string)VERSION, '4.0.1.0', '>=')) {
+			return (int)\Opencart\System\Helper\Utf8\strlen($str);
+		} else {
+			return (int)utf8_strlen($str);
+		}
+	}
 }

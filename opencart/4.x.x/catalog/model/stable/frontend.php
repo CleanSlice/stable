@@ -674,7 +674,7 @@ class Frontend extends \Opencart\System\Engine\Model {
 				'email'                   => $customer_query->row['email'],
 				'telephone'               => $customer_query->row['telephone'],
 				'custom_field'            => json_decode($customer_query->row['custom_field'], true),
-				'address'				  => $this->getAddress($customer_query->row['address_id']),
+				'address'				  => $this->getCustomerAddress($customer_query->row['customer_id']),
 				'newsletter'       		  => $customer_query->row['newsletter'],
 				'status'            	  => $customer_query->row['status'],
 				'safe'            		  => $customer_query->row['safe'],
@@ -685,11 +685,15 @@ class Frontend extends \Opencart\System\Engine\Model {
 		}
 	}
 				
-	public function getAddress(int $address_id): array|bool {
-		$address_query = $this->db->query("SELECT DISTINCT * FROM " . DB_PREFIX . "address WHERE address_id = '" . (int)$address_id . "'");
+	public function getCustomerAddress(int $customer_id): array|bool {
+		$address_query = $this->db->query("SELECT DISTINCT * FROM " . DB_PREFIX . "address WHERE customer_id = '" . (int)$customer_id . "' AND `default` = '1'");
 
 		if ($address_query->num_rows) {
-			$country_query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "country` WHERE country_id = '" . (int)$address_query->row['country_id'] . "'");
+			if (version_compare((string)VERSION, '4.1.0.1', '>=')) {
+				$country_query = $this->db->query("SELECT *, `cd`.`name` FROM `" . DB_PREFIX . "country` `c` LEFT JOIN `" . DB_PREFIX . "country_description` `cd` ON (`c`.`country_id` = `cd`.`country_id`) LEFT JOIN `" . DB_PREFIX . "address_format` af ON (`c`.`address_format_id` = `af`.`address_format_id`) WHERE `c`.`country_id` = '" . (int)$address_query->row['country_id'] . "' AND `cd`.`language_id` = '" . (int)$this->config->get('config_language_id') . "'");
+			} else {
+				$country_query = $this->db->query("SELECT *, `c`.`name` FROM `" . DB_PREFIX . "country` c LEFT JOIN `" . DB_PREFIX . "address_format` af ON (`c`.`address_format_id` = `af`.`address_format_id`) WHERE `c`.`country_id` = '" . (int)$address_query->row['country_id'] . "'");
+			}
 
 			if ($country_query->num_rows) {
 				$country = $country_query->row['name'];
@@ -703,7 +707,11 @@ class Frontend extends \Opencart\System\Engine\Model {
 				$address_format = '';
 			}
 
-			$zone_query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "zone` WHERE zone_id = '" . (int)$address_query->row['zone_id'] . "'");
+			if (version_compare((string)VERSION, '4.1.0.1', '>=')) {
+				$zone_query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "zone` `z` LEFT JOIN `" . DB_PREFIX . "zone_description` `zd` ON (`z`.`zone_id` = `zd`.`zone_id`) WHERE `z`.`zone_id` = '" . (int)$address_query->row['zone_id'] . "' AND `zd`.`language_id` = '" . (int)$this->config->get('config_language_id') . "'");
+			} else {
+				$zone_query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "zone` WHERE zone_id = '" . (int)$address_query->row['zone_id'] . "'");
+			}
 
 			if ($zone_query->num_rows) {
 				$zone = $zone_query->row['name'];
@@ -1061,9 +1069,9 @@ class Frontend extends \Opencart\System\Engine\Model {
 	
 	public function getCountry(int $country_id): array {
 		if (version_compare((string)VERSION, '4.1.0.1', '>=')) {
-			$query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "country` `c` LEFT JOIN `" . DB_PREFIX . "country_description` `cd` ON (`c`.`country_id` = `cd`.`country_id`) WHERE `c`.`country_id` = '" . (int)$country_id . "' AND `cd`.`language_id` = '" . (int)$this->config->get('config_language_id') . "' AND `c`.`status` = '1'");
+			$query = $this->db->query("SELECT *, `cd`.`name` FROM `" . DB_PREFIX . "country` `c` LEFT JOIN `" . DB_PREFIX . "country_description` `cd` ON (`c`.`country_id` = `cd`.`country_id`) LEFT JOIN `" . DB_PREFIX . "address_format` af ON (`c`.`address_format_id` = `af`.`address_format_id`) WHERE `c`.`country_id` = '" . (int)$country_id . "' AND `cd`.`language_id` = '" . (int)$this->config->get('config_language_id') . "' AND `c`.`status` = '1'");
 		} else {
-			$query = $this->db->query("SELECT * FROM " . DB_PREFIX . "country WHERE country_id = '" . (int)$country_id . "' AND status = '1'");
+			$query = $this->db->query("SELECT *, `c`.`name` FROM " . DB_PREFIX . "country c LEFT JOIN `" . DB_PREFIX . "address_format` af ON (`c`.`address_format_id` = `af`.`address_format_id`) WHERE `c`.`country_id` = '" . (int)$country_id . "' AND `c`.status = '1'");
 		}
 		
 		return $query->row;
