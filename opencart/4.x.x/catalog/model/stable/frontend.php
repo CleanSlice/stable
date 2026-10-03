@@ -151,9 +151,7 @@ class Frontend extends \Opencart\System\Engine\Model {
 				'meta_keyword'     	 => $query->row['meta_keyword'],
 				'image'				 => $image,
 				'parent_category_id' => $query->row['parent_id'],
-				'sort_order'  		 => $query->row['sort_order'],
-				'date_added'         => $query->row['date_added'],
-				'date_modified'      => $query->row['date_modified']
+				'sort_order'  		 => $query->row['sort_order']
 			];
 		} else {
 			return false;
@@ -374,12 +372,12 @@ class Frontend extends \Opencart\System\Engine\Model {
 			}
 			
 			if ($query->row['discount']) {
-				$price = $this->currency->format($this->tax->calculate($query->row['discount'], $query->row['tax_class_id'], $this->config->get('config_tax')), $this->session->data['currency']);
+				$price = $this->currency->format($this->tax->calculate((float)$query->row['discount'], $query->row['tax_class_id'], $this->config->get('config_tax')), $this->session->data['currency']);
 			} else {
-				$price = $this->currency->format($this->tax->calculate($query->row['price'], $query->row['tax_class_id'], $this->config->get('config_tax')), $this->session->data['currency']);
+				$price = $this->currency->format($this->tax->calculate((float)$query->row['price'], $query->row['tax_class_id'], $this->config->get('config_tax')), $this->session->data['currency']);
 			}
-			
-			$special = $this->currency->format($this->tax->calculate($query->row['special'], $query->row['tax_class_id'], $this->config->get('config_tax')), $this->session->data['currency']);
+
+			$special = $this->currency->format($this->tax->calculate((float)$query->row['special'], $query->row['tax_class_id'], $this->config->get('config_tax')), $this->session->data['currency']);
 			
 			return [
 				'product_id'       => $query->row['product_id'],
@@ -419,7 +417,7 @@ class Frontend extends \Opencart\System\Engine\Model {
 				'length_class_id'  => $query->row['length_class_id'],
 				'length_class'     => $query->row['length_class'],
 				'subtract'         => $query->row['subtract'],
-				'rating'           => round($query->row['rating']),
+				'rating'           => round((float)$query->row['rating']),
 				'reviews'          => $query->row['reviews'] ? $query->row['reviews'] : 0,
 				'minimum'          => $query->row['minimum'],
 				'sort_order'       => $query->row['sort_order'],

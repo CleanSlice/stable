@@ -102,9 +102,7 @@ class Backend extends \Opencart\System\Engine\Model {
 				'image'				=> $image,
 				'parent_category_id' => $query->row['parent_id'],
 				'sort_order'  		=> $query->row['sort_order'],
-				'status'  			=> $query->row['status'],
-				'date_added'        => $query->row['date_added'],
-				'date_modified'     => $query->row['date_modified']
+				'status'  			=> $query->row['status']
 			);
 		} else {
 			return false;
@@ -333,9 +331,9 @@ class Backend extends \Opencart\System\Engine\Model {
 				$image = '';
 			}
 
-			$price = $this->currency->format($query->row['price'], $this->config->get('config_currency'));
-			$discount = $this->currency->format($query->row['discount'], $this->config->get('config_currency'));			
-			$special = $this->currency->format($query->row['special'], $this->config->get('config_currency'));
+			$price = $this->currency->format((float)$query->row['price'], $this->config->get('config_currency'));
+			$discount = $this->currency->format((float)$query->row['discount'], $this->config->get('config_currency'));
+			$special = $this->currency->format((float)$query->row['special'], $this->config->get('config_currency'));
 						
 			return [
 				'product_id'       => $query->row['product_id'],
@@ -377,7 +375,7 @@ class Backend extends \Opencart\System\Engine\Model {
 				'length_class_id'  => $query->row['length_class_id'],
 				'length_class'     => $query->row['length_class'],
 				'subtract'         => $query->row['subtract'],
-				'rating'           => round($query->row['rating']),
+				'rating'           => round((float)$query->row['rating']),
 				'reviews'          => $query->row['reviews'] ? $query->row['reviews'] : 0,
 				'minimum'          => $query->row['minimum'],
 				'sort_order'       => $query->row['sort_order'],
