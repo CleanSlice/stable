@@ -17,7 +17,14 @@ For every tool call that returned an error (HTTP 400, response carrying `error`/
 
 ### Transport Regression Check (every 4 hours)
 - Alert when an `errors` array lists **every** required field of a tool at once.
-- Alert on logged requests with an empty argument object, or missing `chat_id`.
+- Alert on any HTTP 404, or any response whose body is HTML rather than a JSON envelope —
+  that means something was appended to the API URL, which has no per-tool addresses.
+- Alert on `Tool not found!` — a guessed or mistyped `tool` value.
+- Alert when a call returns the **tool list** and the agent then answered the customer anyway.
+  An omitted `tool` returns the list with HTTP 200, so this failure reads as a success in the
+  log and will not surface in the error checks above.
+- A bare `{}` body is a legitimate call — it asks for the tool list. Alert only when it repeats
+  with no real tool call following it.
 
 ---
 

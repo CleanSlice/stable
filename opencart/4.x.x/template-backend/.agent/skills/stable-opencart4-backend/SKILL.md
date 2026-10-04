@@ -15,40 +15,35 @@ Comprehensive skill for looking up categories, products, customers, and orders i
 
 ## API Endpoints
 
-**Base:** `<STABLE_API_URL>.<TOOL>`
+**One URL for everything:** `<STABLE_API_URL>`
 
-🚨 **Join the tool name with a dot, never a slash.** `<STABLE_API_URL>` already ends in this
-store's controller route; the tool name is the **method** on that route, and OpenCart 4
-separates route from method with `.` — it is not a path segment.
+🚨 **The URL never changes. The tool name goes in the body, not in the URL.** Every tool on
+this page is the same `POST` to the same unmodified `<STABLE_API_URL>`, and which tool runs is
+decided by the **`tool`** field inside the JSON body. Never append the tool name to the URL,
+with a dot, a slash or anything else — the store has no per-tool addresses, and a URL with
+anything added to it fails.
 
-The only correct shape, for every tool: ✅ `<STABLE_API_URL>.getCustomers`
+```
+POST <STABLE_API_URL>
+Content-Type: application/json
+{"tool": "getCustomers", "chat_id": "<CHAT_ID>", ...tool arguments...}
+```
 
-Substituting a slash for that dot returns **HTTP 404** — the store has no such page, and
-nothing is retried for you. Do not reason about which character to use; the dot is already
-written into every `POST` line below, so copy those lines character for character instead of
-reconstructing a URL from memory.
+`tool` is required on every call and its value must match the tool exactly, as written in that
+tool's section below. Each tool's schema pins it, so there is nothing to work out: read the
+name off the `POST` block you are copying.
 
-If a call ever returns 404, do **not** guess at other URL shapes, and do not move the tool
-name into a query parameter — there is no `method` or `tool` parameter, and adding one
-changes nothing. Instead `POST` the bare `<STABLE_API_URL>` with `{}` as the body: it needs no
-arguments and returns the full tool list, where every tool's **`endpoint`** field is the exact,
-ready-to-use URL for this store. Copy that value verbatim. Some older OpenCart 4.0.x stores
-join with `|` instead of `.`, and `endpoint` is the only source that is always right — trust it
-over the sketches below.
+Sending `{}` — or any body without `tool` — is not an error. It returns the full tool list for
+this store, with every tool's name, description and argument schema. That is the one call worth
+making when you are unsure of a name.
 
 ### Transport — the same for every tool
 
 **Every tool is `POST` with a JSON body.** There are no `GET` tools, no query-string
-parameters of your own, and no other HTTP methods. The base URL already carries its own
-`?route=…`; never append further `?` or `&` parameters, and never move tool arguments there.
+parameters of your own, and no other HTTP methods. The URL already carries its own `?route=…`;
+never append further `?` or `&` parameters, and never move tool arguments there.
 
-```
-POST <STABLE_API_URL>.<TOOL>
-Content-Type: application/json
-{"chat_id": "<CHAT_ID>", ...tool arguments...}
-```
-
-All arguments — including `chat_id` — go in the body as one flat JSON object.
+All arguments — `tool`, `chat_id` and the rest — go in the body as one flat JSON object.
 
 ### How to call these tools — use the `http` tool
 
@@ -60,27 +55,31 @@ server other than this API.
 
 | Param | What to pass |
 |---|---|
-| `url` | `<STABLE_API_URL>` + `.` + the tool name — a **dot**, not a slash. Must be absolute — starts with `https://`. |
+| `url` | `<STABLE_API_URL>`, exactly as given, with **nothing appended**. The same value for every tool. Must be absolute — starts with `https://`. |
 | `method` | `"POST"` — always, for every tool here. |
 | `headers` | `{"Content-Type": "application/json"}` |
-| `body` | The arguments object **serialized to a JSON string** — not an object. |
+| `body` | The arguments object **serialized to a JSON string** — not an object. Must include `tool`. |
 
 Worked example. To run the `getOrders` sketch, call `http` with:
 
 ```json
 {
-  "url": "<STABLE_API_URL>.getOrders",
+  "url": "<STABLE_API_URL>",
   "method": "POST",
   "headers": {"Content-Type": "application/json"},
-  "body": "{\"chat_id\":\"<CHAT_ID>\",\"customer_name\":\"Jane Doe\",\"page\":1}"
+  "body": "{\"tool\":\"getOrders\",\"chat_id\":\"<CHAT_ID>\",\"customer_name\":\"Jane Doe\",\"page\":1}"
 }
 ```
 
-Four mistakes that waste a call:
+Note that `url` is identical for every tool on this page — only `body` changes.
 
-- **A slash where the dot belongs.** It is `<STABLE_API_URL>.getOrders`. Replacing that dot
-  with `/` is **HTTP 404** — the store has no such page. This is the single most common way to
-  lose a request here, and a 404 never means the tool or the data is missing.
+Five mistakes that waste a call:
+
+- **Putting the tool name in the URL.** `<STABLE_API_URL>` takes nothing appended — no
+  `.getOrders`, no `/getOrders`, no `?tool=getOrders`. The name belongs in the body, and
+  anything added to the URL produces an error page instead of a JSON answer.
+- **Omitting `tool`.** Without it the call does not fail loudly — it returns the tool list.
+  If you get back a list of tools when you wanted data, you forgot `tool`; add it and resend.
 - **`body` passed as an object.** It is a string parameter. Serialize it. A nested object
   is rejected outright, and the rejection is not a store error — the request never went.
 - **A relative `url`.** `/index.php?route=...` is not accepted. Use the full `<STABLE_API_URL>`
@@ -128,10 +127,15 @@ is a **string** containing the JSON envelope below.
 - **HTTP 400 means the lookup returned nothing.** Never present a 400 response as data,
   and never fill the gap with a guess.
 
-**Bad URL — HTTP 404:** the `body` is an HTML error page, not a JSON envelope. This is never
-a data problem and never means the record is absent — it means the URL was malformed, almost
-always a `/` where a `.` belongs before the tool name. Correct the URL and repeat the *same*
-call. Do not report "not found" to the user on a 404, and do not switch tools.
+**Bad URL — HTTP 404 or an HTML page instead of JSON:** this is never a data problem and never
+means the record is absent. It means something was appended to `<STABLE_API_URL>`. Strip it
+back to the bare URL, keep the body exactly as it was, and resend. Do not report "not found"
+to the user on a 404, and do not switch tools.
+
+**`Tool not found!` — HTTP 400:** the `tool` value is not one of this store's tools, usually a
+typo or a guessed name. `POST` `{}` to get the authoritative list, then use a name from it
+verbatim. Do not retry the same name, and do not tell the user the data is missing — nothing
+was looked up.
 
 ### Authentication
 
@@ -158,42 +162,42 @@ If a group is disabled for the store, its tools return `You do not have permissi
 
 ### `getCategory`
 ```
-POST <STABLE_API_URL>.getCategory
+POST <STABLE_API_URL>
 Content-Type: application/json
-{"chat_id": "<CHAT_ID>", "category_id": <CATEGORY_ID>}
+{"tool": "getCategory", "chat_id": "<CHAT_ID>", "category_id": <CATEGORY_ID>}
 ```
-**Required:** `chat_id`, `category_id`
+**Required:** `tool`, `chat_id`, `category_id`
 **Result:** a single category object (see [Category fields](#category-fields))
 **Errors:** `Chat ID required!`, `Category ID required!`, `Chat not found!`, `Category not found!`
 
 ### `getCategories`
 ```
-POST <STABLE_API_URL>.getCategories
+POST <STABLE_API_URL>
 Content-Type: application/json
-{"chat_id": "<CHAT_ID>", "name": "", "parent_category_id": 0, "status": 1, "sort": "sort_order", "order": "ASC", "page": 1}
+{"tool": "getCategories", "chat_id": "<CHAT_ID>", "name": "", "parent_category_id": 0, "status": 1, "sort": "sort_order", "order": "ASC", "page": 1}
 ```
-**Required:** `chat_id`
+**Required:** `tool`, `chat_id`
 **Optional:** `name`, `parent_category_id` (`0` = top level), `status` (`1` enabled / `0` disabled — omit for both), `sort`, `order`, `page`
 **Sorting:** `sort` accepts `name`, `status`, `sort_order` (default `sort_order`); `order` accepts `ASC` or `DESC` (default `ASC`)
 **Result:** `{ "categories": { "<category_id>": {...}, ... } }` — one level of the category tree, keyed by ID
 
 ### `getManufacturer`
 ```
-POST <STABLE_API_URL>.getManufacturer
+POST <STABLE_API_URL>
 Content-Type: application/json
-{"chat_id": "<CHAT_ID>", "manufacturer_id": <MANUFACTURER_ID>}
+{"tool": "getManufacturer", "chat_id": "<CHAT_ID>", "manufacturer_id": <MANUFACTURER_ID>}
 ```
-**Required:** `chat_id`, `manufacturer_id`
+**Required:** `tool`, `chat_id`, `manufacturer_id`
 **Result:** a single manufacturer object (see [Manufacturer fields](#manufacturer-fields))
 **Errors:** `Manufacturer ID required!`, `Manufacturer not found!`
 
 ### `getManufacturers`
 ```
-POST <STABLE_API_URL>.getManufacturers
+POST <STABLE_API_URL>
 Content-Type: application/json
-{"chat_id": "<CHAT_ID>", "name": "", "sort": "name", "order": "ASC", "page": 1}
+{"tool": "getManufacturers", "chat_id": "<CHAT_ID>", "name": "", "sort": "name", "order": "ASC", "page": 1}
 ```
-**Required:** `chat_id`
+**Required:** `tool`, `chat_id`
 **Optional:** `name` (matches any word, `LIKE %word%`), `sort`, `order`, `page`
 **Sorting:** `sort` accepts `name` or `sort_order` (default `name`); `order` accepts `ASC` or `DESC` (default `ASC`)
 **Result:** `{ "manufacturers": [...], "manufacturerCount": N, "page": N, "pageCount": N }` (page size 20)
@@ -202,21 +206,21 @@ Use this to turn a brand name into a `manufacturer_id`, then pass that id to `ge
 
 ### `getProduct`
 ```
-POST <STABLE_API_URL>.getProduct
+POST <STABLE_API_URL>
 Content-Type: application/json
-{"chat_id": "<CHAT_ID>", "product_id": <PRODUCT_ID>}
+{"tool": "getProduct", "chat_id": "<CHAT_ID>", "product_id": <PRODUCT_ID>}
 ```
-**Required:** `chat_id`, `product_id`
+**Required:** `tool`, `chat_id`, `product_id`
 **Result:** a single product object (see [Product fields](#product-fields))
 **Errors:** `Product ID required!`, `Product not found!`
 
 ### `getProducts`
 ```
-POST <STABLE_API_URL>.getProducts
+POST <STABLE_API_URL>
 Content-Type: application/json
-{"chat_id": "<CHAT_ID>", "name": "chair", "category_id": 0, "quantity_max": 5, "status": 1, "sort": "quantity", "order": "ASC", "page": 1}
+{"tool": "getProducts", "chat_id": "<CHAT_ID>", "name": "chair", "category_id": 0, "quantity_max": 5, "status": 1, "sort": "quantity", "order": "ASC", "page": 1}
 ```
-**Required:** `chat_id`
+**Required:** `tool`, `chat_id`
 
 **Optional filters:**
 
@@ -239,51 +243,51 @@ Omit a filter to leave it out — there is no "any" value to pass. `tag` and `de
 
 ### `getCustomer`
 ```
-POST <STABLE_API_URL>.getCustomer
+POST <STABLE_API_URL>
 Content-Type: application/json
-{"chat_id": "<CHAT_ID>", "customer_id": <CUSTOMER_ID>}
+{"tool": "getCustomer", "chat_id": "<CHAT_ID>", "customer_id": <CUSTOMER_ID>}
 ```
-**Required:** `chat_id`, `customer_id`
+**Required:** `tool`, `chat_id`, `customer_id`
 **Result:** a single customer object (see [Customer fields](#customer-fields))
 **Errors:** `Customer ID required!`, `Customer not found!`
 
 ### `getCustomers`
 ```
-POST <STABLE_API_URL>.getCustomers
+POST <STABLE_API_URL>
 Content-Type: application/json
-{"chat_id": "<CHAT_ID>", "name": "Jane", "email": "", "customer_group_id": 0, "status": 1, "date_added_from": "", "date_added_to": "", "sort": "date_added", "order": "DESC", "page": 1}
+{"tool": "getCustomers", "chat_id": "<CHAT_ID>", "name": "Jane", "email": "", "customer_group_id": 0, "status": 1, "date_added_from": "", "date_added_to": "", "sort": "date_added", "order": "DESC", "page": 1}
 ```
-**Required:** `chat_id`
+**Required:** `tool`, `chat_id`
 **Optional:** `name`, `email`, `customer_group_id`, `status` (`1`/`0` — omit for both), `date_added_from` / `date_added_to` (`YYYY-MM-DD`, inclusive), `sort`, `order`, `page`
 **Sorting:** `sort` accepts `name`, `email`, `customer_group`, `status`, `date_added` (default `name`); `order` accepts `ASC` or `DESC` (default `ASC`)
 **Result:** `{ "customers": [...], "customerCount": N, "page": N, "pageCount": N }` (page size 20)
 
 ### `getCustomerGroups`
 ```
-POST <STABLE_API_URL>.getCustomerGroups
+POST <STABLE_API_URL>
 Content-Type: application/json
-{"chat_id": "<CHAT_ID>"}
+{"tool": "getCustomerGroups", "chat_id": "<CHAT_ID>"}
 ```
-**Required:** `chat_id`
+**Required:** `tool`, `chat_id`
 **Result:** `{ "customer_groups": [ { "customer_group_id": ..., "name": ... }, ... ] }`
 
 ### `getOrder`
 ```
-POST <STABLE_API_URL>.getOrder
+POST <STABLE_API_URL>
 Content-Type: application/json
-{"chat_id": "<CHAT_ID>", "order_id": <ORDER_ID>}
+{"tool": "getOrder", "chat_id": "<CHAT_ID>", "order_id": <ORDER_ID>}
 ```
-**Required:** `chat_id`, `order_id`
+**Required:** `tool`, `chat_id`, `order_id`
 **Result:** a single order object (see [Order fields](#order-fields))
 **Errors:** `Order ID required!`, `Order not found!`
 
 ### `getOrders`
 ```
-POST <STABLE_API_URL>.getOrders
+POST <STABLE_API_URL>
 Content-Type: application/json
-{"chat_id": "<CHAT_ID>", "customer_name": "Jane Doe", "order_status_id": 0, "total_min": 0, "total_max": 0, "date_added_from": "", "date_added_to": "", "sort": "order_id", "order": "DESC", "page": 1}
+{"tool": "getOrders", "chat_id": "<CHAT_ID>", "customer_name": "Jane Doe", "order_status_id": 0, "total_min": 0, "total_max": 0, "date_added_from": "", "date_added_to": "", "sort": "order_id", "order": "DESC", "page": 1}
 ```
-**Required:** `chat_id`
+**Required:** `tool`, `chat_id`
 **Optional:** `customer_name`, `order_status_id`, `total_min` / `total_max`, `date_added_from` / `date_added_to` (`YYYY-MM-DD`, inclusive), `sort`, `order`, `page`
 
 **Sorting:** `sort` accepts `order_id`, `customer_name`, `order_status`, `total`, `date_added` (default `order_id`); `order` accepts `ASC` or `DESC` — **default `DESC` here**, unlike the other search tools.
@@ -316,29 +320,29 @@ Two details about these rows:
 
 ### `getOrderStatuses`
 ```
-POST <STABLE_API_URL>.getOrderStatuses
+POST <STABLE_API_URL>
 Content-Type: application/json
-{"chat_id": "<CHAT_ID>"}
+{"tool": "getOrderStatuses", "chat_id": "<CHAT_ID>"}
 ```
-**Required:** `chat_id`
+**Required:** `tool`, `chat_id`
 **Result:** `{ "order_statuses": [ { "order_status_id": ..., "name": ... }, ... ] }`
 
 ### `getCountries`
 ```
-POST <STABLE_API_URL>.getCountries
+POST <STABLE_API_URL>
 Content-Type: application/json
-{"chat_id": "<CHAT_ID>"}
+{"tool": "getCountries", "chat_id": "<CHAT_ID>"}
 ```
-**Required:** `chat_id` (no permission group — always available)
+**Required:** `tool`, `chat_id` (no permission group — always available)
 **Result:** `{ "countries": [ { "country_id": ..., "name": ..., "iso_code_2": ..., ... }, ... ] }`
 
 ### `getZonesByCountryId`
 ```
-POST <STABLE_API_URL>.getZonesByCountryId
+POST <STABLE_API_URL>
 Content-Type: application/json
-{"chat_id": "<CHAT_ID>", "country_id": <COUNTRY_ID>}
+{"tool": "getZonesByCountryId", "chat_id": "<CHAT_ID>", "country_id": <COUNTRY_ID>}
 ```
-**Required:** `chat_id`, `country_id` (no permission group — always available)
+**Required:** `tool`, `chat_id`, `country_id` (no permission group — always available)
 **Result:** `{ "zones": [ { "zone_id": ..., "name": ..., "code": ..., ... }, ... ] }`
 
 ---
@@ -390,41 +394,41 @@ Every line below is `POST` with the shown JSON body.
 
 ### 1. Find a product by name and check stock
 ```
-POST <STABLE_API_URL>.getProducts {"chat_id": "<CHAT_ID>", "name": "hoodie"}
+POST <STABLE_API_URL> {"tool": "getProducts", "chat_id": "<CHAT_ID>", "name": "hoodie"}
 ```
 Read `quantity` and `status` on each returned product.
 
 ### 2. List a customer's recent orders
 ```
-POST <STABLE_API_URL>.getOrders {"chat_id": "<CHAT_ID>", "customer_name": "Jane Doe", "page": 1}
-POST <STABLE_API_URL>.getOrder  {"chat_id": "<CHAT_ID>", "order_id": <ORDER_ID>}
+POST <STABLE_API_URL> {"tool": "getOrders", "chat_id": "<CHAT_ID>", "customer_name": "Jane Doe", "page": 1}
+POST <STABLE_API_URL> {"tool": "getOrder", "chat_id": "<CHAT_ID>", "order_id": <ORDER_ID>}
 ```
 The second call gives full line items and totals.
 
 ### 3. Find all Pending orders from the last 7 days
 ```
-POST <STABLE_API_URL>.getOrderStatuses {"chat_id": "<CHAT_ID>"}
+POST <STABLE_API_URL> {"tool": "getOrderStatuses", "chat_id": "<CHAT_ID>"}
 ```
 Look up the `order_status_id` for "Pending", then:
 ```
-POST <STABLE_API_URL>.getOrders {"chat_id": "<CHAT_ID>", "order_status_id": <PENDING_ID>, "date_added_from": "2026-07-10", "date_added_to": "2026-07-17"}
+POST <STABLE_API_URL> {"tool": "getOrders", "chat_id": "<CHAT_ID>", "order_status_id": <PENDING_ID>, "date_added_from": "2026-07-10", "date_added_to": "2026-07-17"}
 ```
 
 ### 4. Resolve a shipping zone for an order/address
 ```
-POST <STABLE_API_URL>.getCountries        {"chat_id": "<CHAT_ID>"}
-POST <STABLE_API_URL>.getZonesByCountryId {"chat_id": "<CHAT_ID>", "country_id": <COUNTRY_ID>}
+POST <STABLE_API_URL> {"tool": "getCountries", "chat_id": "<CHAT_ID>"}
+POST <STABLE_API_URL> {"tool": "getZonesByCountryId", "chat_id": "<CHAT_ID>", "country_id": <COUNTRY_ID>}
 ```
 
 ### 5. See which customer group a customer belongs to
 ```
-POST <STABLE_API_URL>.getCustomerGroups {"chat_id": "<CHAT_ID>"}
-POST <STABLE_API_URL>.getCustomers      {"chat_id": "<CHAT_ID>", "customer_group_id": <CUSTOMER_GROUP_ID>}
+POST <STABLE_API_URL> {"tool": "getCustomerGroups", "chat_id": "<CHAT_ID>"}
+POST <STABLE_API_URL> {"tool": "getCustomers", "chat_id": "<CHAT_ID>", "customer_group_id": <CUSTOMER_GROUP_ID>}
 ```
 
 ### 6. Browse a category tree
 ```
-POST <STABLE_API_URL>.getCategories {"chat_id": "<CHAT_ID>", "parent_id": 0}
+POST <STABLE_API_URL> {"tool": "getCategories", "chat_id": "<CHAT_ID>", "parent_id": 0}
 ```
 Recurse into a child by calling again with `"parent_id": <CHILD_CATEGORY_ID>`.
 
@@ -452,6 +456,7 @@ remembered value, or a plausible-looking record as if it came from the store.
 | `Chat ID required!` | `chat_id` missing from the request body | Ask the user to refresh the OpenCart admin page |
 | `Chat not found!` | `chat_id` doesn't match a known session | Ask the user to refresh the OpenCart admin page |
 | `You do not have permission to use this tool!` | This tool's permission group is disabled for this store | Explain the tool is out of scope here; a store admin can enable it under the module's settings |
+| `Tool not found!` | `tool` held a name this store doesn't have | `POST` `{}` for the real list and copy a name from it. Never retry the same name |
 | `<Field> required!` | A required field was missing from the JSON body | Supply the field and retry. If *every* field is reported missing, the body didn't arrive — resend as a JSON object in the POST body |
 | `<Thing> not found!` | The ID didn't match any record | Double-check the ID or broaden the search with the corresponding `get<Things>` tool |
 

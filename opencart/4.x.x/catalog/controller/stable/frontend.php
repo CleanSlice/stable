@@ -15,6 +15,8 @@ class Frontend extends \Opencart\System\Engine\Controller {
     }
 	
 	public function index(): void {
+		$this->load->model('extension/stable/module/stable');
+		
 		$_config = new \Opencart\System\Engine\Config();
 		$_config->addPath(DIR_EXTENSION . 'stable/system/config/');
 		$_config->load('stable');
@@ -23,367 +25,398 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		
 		$setting = array_replace_recursive((array)$config_setting, (array)$this->config->get('module_stable_setting'));
 						
-		$data = [
-			'jsonrpc' => '2.0',
-            'result' => [
-				'tools' => [],
-				'serverInfo' => [
-                    'name' => 'php-mcp-server',
-                    'version' => '1.0.0'
-                ]
-			]
-		];
+		$request = $this->getRequestData();
 		
-		$data['result']['tools']['getCategory'] = [
-			'name' => 'getCategory',
-			'description' => 'Get information about the product category',
-			'endpoint' => $this->url->link('extension/stable/stable/frontend' . $this->separator . 'getCategory', ''),
-			'requestMethod' => 'POST',
-			'inputSchema' => [
-				'type' => 'object',
-				'properties' => [
-					'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
-					'category_id' => ['type' => 'number', 'description' => 'Category ID']
-				],
-				'required' => ['chat_id', 'category_id']
-			]
-		];
-		
-		$data['result']['tools']['getCategories'] = [
-			'name' => 'getCategories',
-			'description' => 'Get information about product categories',
-			'endpoint' => $this->url->link('extension/stable/stable/frontend' . $this->separator . 'getCategories', ''),
-			'requestMethod' => 'POST',
-			'inputSchema' => [
-				'type' => 'object',
-				'properties' => [
-					'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
-					'name' => ['type' => 'string', 'description' => 'Search categories by name'],
-					'parent_category_id' => ['type' => 'number', 'description' => 'Search categories by parent Category ID'],
-					'sort' => ['type' => 'string', 'description' => 'Sort in the category search results (name/sort_order)', 'default' => 'sort_order'],
-					'order' => ['type' => 'string', 'description' => 'Order in the category search results (ASC/DESC)', 'default' => 'ASC'],
-					'page' => ['type' => 'number', 'description' => 'Page number in the category search results', 'default' => 1]
-				],
-				'required' => ['chat_id']
-			]
-		];
-		
-		$data['result']['tools']['getManufacturer'] = [
-			'name' => 'getManufacturer',
-			'description' => 'Get information about the product manufacturer',
-			'endpoint' => $this->url->link('extension/stable/stable/frontend' . $this->separator . 'getManufacturer', ''),
-			'requestMethod' => 'POST',
-			'inputSchema' => [
-				'type' => 'object',
-				'properties' => [
-					'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
-					'manufacturer_id' => ['type' => 'number', 'description' => 'Manufacturer ID']
-				],
-				'required' => ['chat_id', 'manufacturer_id']
-			]
-		];
-		
-		$data['result']['tools']['getManufacturers'] = [
-			'name' => 'getManufacturers',
-			'description' => 'Get information about product manufacturers',
-			'endpoint' => $this->url->link('extension/stable/stable/frontend' . $this->separator . 'getManufacturers', ''),
-			'requestMethod' => 'POST',
-			'inputSchema' => [
-				'type' => 'object',
-				'properties' => [
-					'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
-					'name' => ['type' => 'string', 'description' => 'Search manufacturers by name'],
-					'sort' => ['type' => 'string', 'description' => 'Sort in the manufacturer search results (name/sort_order)', 'default' => 'name'],
-					'order' => ['type' => 'string', 'description' => 'Order in the manufacturer search results (ASC/DESC)', 'default' => 'ASC'],
-					'page' => ['type' => 'number', 'description' => 'Page number in the manufacturer search results', 'default' => 1]
-				],
-				'required' => ['chat_id']
-			]
-		];
-		
-		$data['result']['tools']['getProduct'] = [
-			'name' => 'getProduct',
-			'description' => 'Get information about the product',
-			'endpoint' => $this->url->link('extension/stable/stable/frontend' . $this->separator . 'getProduct', ''),
-			'requestMethod' => 'POST',
-			'inputSchema' => [
-				'type' => 'object',
-				'properties' => [
-					'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
-					'product_id' => ['type' => 'number', 'description' => 'Product ID']
-				],
-				'required' => ['chat_id', 'product_id']
-			]
-		];
-		
-		$data['result']['tools']['getProducts'] = [
-			'name' => 'getProducts',
-			'description' => 'Get information about products',
-			'endpoint' =>$this->url->link('extension/stable/stable/frontend' . $this->separator . 'getProducts', ''),
-			'requestMethod' => 'POST',
-			'inputSchema' => [
-				'type' => 'object',
-				'properties' => [
-					'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
-					'name' => ['type' => 'string', 'description' => 'Search products by name'],
-					'model' => ['type' => 'string', 'description' => 'Search products by model'],
-					'price_min' => ['type' => 'number', 'description' => 'Search products priced at or above this value. Give it in the same terms the customer sees in the results: tax included, in the current currency. Numbers only, no currency symbol.'],
-					'price_max' => ['type' => 'number', 'description' => 'Search products priced at or below this value. Give it in the same terms the customer sees in the results: tax included, in the current currency. Numbers only, no currency symbol.'],
-					'quantity_min' => ['type' => 'number', 'description' => 'Search products with a quantity greater than this value'],
-					'quantity_max' => ['type' => 'number', 'description' => 'Search products with a quantity less than this value'],
-					'manufacturer_id' => ['type' => 'number', 'description' => 'Search products with this manufacturer ID'],
-					'category_id' => ['type' => 'number', 'description' => 'Search products in the category with this ID'],
-					'date_added_from' => ['type' => 'string', 'format' => 'date', 'description' => 'Search products by date added, starting from this date (Format: YYYY-MM-DD)'],
-					'date_added_to' => ['type' => 'string', 'format' => 'date', 'description' => 'Search products by date added, ending with this date (Format: YYYY-MM-DD)'],
-					'sort' => ['type' => 'string', 'description' => 'Sort in the product search results (name/model/price/quantity/sort_order/date_added/manufacturer/rating)', 'default' => 'sort_order'],
-					'order' => ['type' => 'string', 'description' => 'Order in the product search results (ASC/DESC)', 'default' => 'ASC'],
-					'page' => ['type' => 'number', 'description' => 'Page number in the product search results', 'default' => 1]
-				],
-				'required' => ['chat_id']
-			]
-		];
-		
-		$data['result']['tools']['getCurrentCustomer'] = [
-			'name' => 'getCurrentCustomer',
-			'description' => 'Get information about the current customer',
-			'endpoint' => $this->url->link('extension/stable/stable/frontend' . $this->separator . 'getCurrentCustomer', ''),
-			'requestMethod' => 'POST',
-			'inputSchema' => [
-				'type' => 'object',
-				'properties' => [
-					'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
-				],
-				'required' => ['chat_id']
-			]
-		];
-		
-		$data['result']['tools']['getCurrentCustomerOrder'] = [
-			'name' => 'getCurrentCustomerOrder',
-			'description' => 'Get information about current customer order',
-			'endpoint' => $this->url->link('extension/stable/stable/frontend' . $this->separator . 'getCurrentCustomerOrder', ''),
-			'requestMethod' => 'POST',
-			'inputSchema' => [
-				'type' => 'object',
-				'properties' => [
-					'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
-					'order_id' => ['type' => 'number', 'description' => 'Order ID']
-				],
-				'required' => ['chat_id', 'order_id']
-			]
-		];
-				
-		$data['result']['tools']['getCurrentCustomerOrders'] = [
-			'name' => 'getCurrentCustomerOrders',
-			'description' => 'Get information about current customer orders',
-			'endpoint' => $this->url->link('extension/stable/stable/frontend' . $this->separator . 'getCurrentCustomerOrders', ''),
-			'requestMethod' => 'POST',
-			'inputSchema' => [
-				'type' => 'object',
-				'properties' => [
-					'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
-					'page' => ['type' => 'number', 'description' => 'Page number in the customer order search results', 'default' => 1]
-				],
-				'required' => ['chat_id']
-			]
-		];
-				
-		$data['result']['tools']['addCartProduct'] = [
-			'name' => 'addCartProduct',
-			'description' => 'Add product to cart',
-			'endpoint' => $this->url->link('extension/stable/stable/frontend' . $this->separator . 'addCartProduct', ''),
-			'requestMethod' => 'POST',
-			'inputSchema' => [
-				'type' => 'object',
-				'properties' => [
-					'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
-					'product_id' => ['type' => 'number', 'description' => 'Product ID'],
-					'quantity' => ['type' => 'number', 'description' => 'Quantity', 'default' => 1],
-					'option' => [
-						'type' => 'object', 
-						'description' => 'Product options where KEY is product_option_id (stringified number) and VALUE is product_option_value_id (number) or text value.',
-						'additionalProperties' => [
-							'type' => ['number', 'string', 'array'],
-							'description' => 'The value of the product option (product_option_value_id, text, or array of IDs for checkboxes)'
-						]
-					],						
-					'subscription_plan_id' => ['type' => 'number', 'description' => 'Subscription plan ID', 'default' => 0],
-				],
-				'required' => ['chat_id', 'product_id']
-			]
-		];
-		
-		$data['result']['tools']['editCartProduct'] = [
-			'name' => 'editCartProduct',
-			'description' => 'Edit product in the cart',
-			'endpoint' => $this->url->link('extension/stable/stable/frontend' . $this->separator . 'editCartProduct', ''),
-			'requestMethod' => 'POST',
-			'inputSchema' => [
-				'type' => 'object',
-				'properties' => [
-					'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
-					'cart_id' => ['type' => 'number', 'description' => 'Cart ID'],
-					'quantity' => ['type' => 'number', 'description' => 'Quantity']
-				],
-				'required' => ['chat_id', 'cart_id', 'quantity']
-			]
-		];
-		
-		$data['result']['tools']['deleteCartProduct'] = [
-			'name' => 'deleteCartProduct',
-			'description' => 'Delete product from the cart',
-			'endpoint' => $this->url->link('extension/stable/stable/frontend' . $this->separator . 'deleteCartProduct', ''),
-			'requestMethod' => 'POST',
-			'inputSchema' => [
-				'type' => 'object',
-				'properties' => [
-					'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
-					'cart_id' => ['type' => 'number', 'description' => 'Cart ID']
-				],
-				'required' => ['chat_id', 'cart_id']
-			]
-		];
-		
-		$data['result']['tools']['getCartProducts'] = [
-			'name' => 'getCartProducts',
-			'description' => 'Get information about products in the cart',
-			'endpoint' => $this->url->link('extension/stable/stable/frontend' . $this->separator . 'getCartProducts', ''),
-			'requestMethod' => 'POST',
-			'inputSchema' => [
-				'type' => 'object',
-				'properties' => [
-					'chat_id' => ['type' => 'string', 'description' => 'Chat ID']
-				],
-				'required' => ['chat_id']
-			]
-		];
-						
-		$data['result']['tools']['createOrder'] = [
-			'name' => 'createOrder',
-			'description' => 'Create Order',
-			'endpoint' => $this->url->link('extension/stable/stable/frontend' . $this->separator . 'createOrder', ''),
-			'requestMethod' => 'POST',
-			'inputSchema' => [
-				'type' => 'object',
-				'properties' => [
-					'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
-					'firstname' => ['type' => 'string', 'description' => 'First Name'],
-					'lastname' => ['type' => 'string', 'description' => 'Last Name'],
-					'email' => ['type' => 'string', 'description' => 'E-Mail'],
-					'telephone' => ['type' => 'string', 'description' => 'Telephone'],
-					'company' => ['type' => 'string', 'description' => 'Company'],
-					'address_1' => ['type' => 'string', 'description' => 'Address 1'],
-					'address_2' => ['type' => 'string', 'description' => 'Address 2'],
-					'city' => ['type' => 'string', 'description' => 'City'],
-					'postcode' => ['type' => 'string', 'description' => 'Postcode'],
-					'country_id' => ['type' => 'number', 'description' => 'Country ID'],
-					'zone_id' => ['type' => 'number', 'description' => 'Zone ID'],
-					'shipping_method_code' => ['type' => 'string', 'description' => 'Shipping Method Code, exactly as returned by getShippingMethods. Required whenever the cart contains a shippable product; omit only for digital-only carts.'],
-					'payment_method_code' => ['type' => 'string', 'description' => 'Payment Method Code, exactly as returned by getPaymentMethods. Some methods need extra fields — getPaymentMethods lists them in required_fields, and they become required for this call.']
-				],
-				'required' => ['chat_id', 'payment_method_code'],
-				'allOf' => []
-			]
-		];
-		
-		foreach ($setting['payment_method'] as $payment_method) {
-			if (empty($payment_method['field'])) {
-				continue;
-			}
-	
-			$required_fields = [];
-				
-			foreach ($payment_method['field'] as $field) {
-				$data['result']['tools']['createOrder']['inputSchema']['properties'][$field['code']] = [
-					'type' => $field['type'], 
-					'description' => $field['description']
-				];
+		if (empty($request['tool'])) {
+			$data = [
+				'jsonrpc' => '2.0',
+				'result' => [
+					'endpoint' => $this->url->link('extension/stable/stable/frontend', ''),
+					'tools' => [],
+					'serverInfo' => [
+						'name' => 'php-mcp-server',
+						'version' => '1.0.0'
+					]
+				]
+			];
+			
+			$data['result']['tools']['getCategory'] = [
+				'name' => 'getCategory',
+				'description' => 'Get information about the product category',
+				'requestMethod' => 'POST',
+				'inputSchema' => [
+					'type' => 'object',
+					'properties' => [
+						'tool' => ['type' => 'string', 'const' => 'getCategory', 'default' => 'getCategory', 'description' => 'Must be exactly "getCategory".'],
+						'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
+						'category_id' => ['type' => 'number', 'description' => 'Category ID']
+					],
+					'required' => ['tool', 'chat_id', 'category_id']
+				]
+			];
+			
+			$data['result']['tools']['getCategories'] = [
+				'name' => 'getCategories',
+				'description' => 'Get information about product categories',
+				'requestMethod' => 'POST',
+				'inputSchema' => [
+					'type' => 'object',
+					'properties' => [
+						'tool' => ['type' => 'string', 'const' => 'getCategories', 'default' => 'getCategories', 'description' => 'Must be exactly "getCategories".'],
+						'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
+						'name' => ['type' => 'string', 'description' => 'Search categories by name'],
+						'parent_category_id' => ['type' => 'number', 'description' => 'Search categories by parent Category ID'],
+						'sort' => ['type' => 'string', 'description' => 'Sort in the category search results (name/sort_order)', 'default' => 'sort_order'],
+						'order' => ['type' => 'string', 'description' => 'Order in the category search results (ASC/DESC)', 'default' => 'ASC'],
+						'page' => ['type' => 'number', 'description' => 'Page number in the category search results', 'default' => 1]
+					],
+					'required' => ['tool', 'chat_id']
+				]
+			];
+			
+			$data['result']['tools']['getManufacturer'] = [
+				'name' => 'getManufacturer',
+				'description' => 'Get information about the product manufacturer',
+				'requestMethod' => 'POST',
+				'inputSchema' => [
+					'type' => 'object',
+					'properties' => [
+						'tool' => ['type' => 'string', 'const' => 'getManufacturer', 'default' => 'getManufacturer', 'description' => 'Must be exactly "getManufacturer".'],
+						'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
+						'manufacturer_id' => ['type' => 'number', 'description' => 'Manufacturer ID']
+					],
+					'required' => ['tool', 'chat_id', 'manufacturer_id']
+				]
+			];
+			
+			$data['result']['tools']['getManufacturers'] = [
+				'name' => 'getManufacturers',
+				'description' => 'Get information about product manufacturers',
+				'requestMethod' => 'POST',
+				'inputSchema' => [
+					'type' => 'object',
+					'properties' => [
+						'tool' => ['type' => 'string', 'const' => 'getManufacturers', 'default' => 'getManufacturers', 'description' => 'Must be exactly "getManufacturers".'],
+						'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
+						'name' => ['type' => 'string', 'description' => 'Search manufacturers by name'],
+						'sort' => ['type' => 'string', 'description' => 'Sort in the manufacturer search results (name/sort_order)', 'default' => 'name'],
+						'order' => ['type' => 'string', 'description' => 'Order in the manufacturer search results (ASC/DESC)', 'default' => 'ASC'],
+						'page' => ['type' => 'number', 'description' => 'Page number in the manufacturer search results', 'default' => 1]
+					],
+					'required' => ['tool', 'chat_id']
+				]
+			];
+			
+			$data['result']['tools']['getProduct'] = [
+				'name' => 'getProduct',
+				'description' => 'Get information about the product',
+				'requestMethod' => 'POST',
+				'inputSchema' => [
+					'type' => 'object',
+					'properties' => [
+						'tool' => ['type' => 'string', 'const' => 'getProduct', 'default' => 'getProduct', 'description' => 'Must be exactly "getProduct".'],
+						'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
+						'product_id' => ['type' => 'number', 'description' => 'Product ID']
+					],
+					'required' => ['tool', 'chat_id', 'product_id']
+				]
+			];
+			
+			$data['result']['tools']['getProducts'] = [
+				'name' => 'getProducts',
+				'description' => 'Get information about products',
+				'requestMethod' => 'POST',
+				'inputSchema' => [
+					'type' => 'object',
+					'properties' => [
+						'tool' => ['type' => 'string', 'const' => 'getProducts', 'default' => 'getProducts', 'description' => 'Must be exactly "getProducts".'],
+						'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
+						'name' => ['type' => 'string', 'description' => 'Search products by name'],
+						'model' => ['type' => 'string', 'description' => 'Search products by model'],
+						'price_min' => ['type' => 'number', 'description' => 'Search products priced at or above this value. Give it in the same terms the customer sees in the results: tax included, in the current currency. Numbers only, no currency symbol.'],
+						'price_max' => ['type' => 'number', 'description' => 'Search products priced at or below this value. Give it in the same terms the customer sees in the results: tax included, in the current currency. Numbers only, no currency symbol.'],
+						'quantity_min' => ['type' => 'number', 'description' => 'Search products with a quantity greater than this value'],
+						'quantity_max' => ['type' => 'number', 'description' => 'Search products with a quantity less than this value'],
+						'manufacturer_id' => ['type' => 'number', 'description' => 'Search products with this manufacturer ID'],
+						'category_id' => ['type' => 'number', 'description' => 'Search products in the category with this ID'],
+						'date_added_from' => ['type' => 'string', 'format' => 'date', 'description' => 'Search products by date added, starting from this date (Format: YYYY-MM-DD)'],
+						'date_added_to' => ['type' => 'string', 'format' => 'date', 'description' => 'Search products by date added, ending with this date (Format: YYYY-MM-DD)'],
+						'sort' => ['type' => 'string', 'description' => 'Sort in the product search results (name/model/price/quantity/sort_order/date_added/manufacturer/rating)', 'default' => 'sort_order'],
+						'order' => ['type' => 'string', 'description' => 'Order in the product search results (ASC/DESC)', 'default' => 'ASC'],
+						'page' => ['type' => 'number', 'description' => 'Page number in the product search results', 'default' => 1]
+					],
+					'required' => ['tool', 'chat_id']
+				]
+			];
+			
+			$data['result']['tools']['getCurrentCustomer'] = [
+				'name' => 'getCurrentCustomer',
+				'description' => 'Get information about the current customer',
+				'requestMethod' => 'POST',
+				'inputSchema' => [
+					'type' => 'object',
+					'properties' => [
+						'tool' => ['type' => 'string', 'const' => 'getCurrentCustomer', 'default' => 'getCurrentCustomer', 'description' => 'Must be exactly "getCurrentCustomer".'],
+						'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
+					],
+					'required' => ['tool', 'chat_id']
+				]
+			];
+			
+			$data['result']['tools']['getCurrentCustomerOrder'] = [
+				'name' => 'getCurrentCustomerOrder',
+				'description' => 'Get information about current customer order',
+				'requestMethod' => 'POST',
+				'inputSchema' => [
+					'type' => 'object',
+					'properties' => [
+						'tool' => ['type' => 'string', 'const' => 'getCurrentCustomerOrder', 'default' => 'getCurrentCustomerOrder', 'description' => 'Must be exactly "getCurrentCustomerOrder".'],
+						'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
+						'order_id' => ['type' => 'number', 'description' => 'Order ID']
+					],
+					'required' => ['tool', 'chat_id', 'order_id']
+				]
+			];
 					
-				if (!empty($field['required'])) {
-					$required_fields[] = $field['code'];
+			$data['result']['tools']['getCurrentCustomerOrders'] = [
+				'name' => 'getCurrentCustomerOrders',
+				'description' => 'Get information about current customer orders',
+				'requestMethod' => 'POST',
+				'inputSchema' => [
+					'type' => 'object',
+					'properties' => [
+						'tool' => ['type' => 'string', 'const' => 'getCurrentCustomerOrders', 'default' => 'getCurrentCustomerOrders', 'description' => 'Must be exactly "getCurrentCustomerOrders".'],
+						'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
+						'page' => ['type' => 'number', 'description' => 'Page number in the customer order search results', 'default' => 1]
+					],
+					'required' => ['tool', 'chat_id']
+				]
+			];
+					
+			$data['result']['tools']['addCartProduct'] = [
+				'name' => 'addCartProduct',
+				'description' => 'Add product to cart',
+				'requestMethod' => 'POST',
+				'inputSchema' => [
+					'type' => 'object',
+					'properties' => [
+						'tool' => ['type' => 'string', 'const' => 'addCartProduct', 'default' => 'addCartProduct', 'description' => 'Must be exactly "addCartProduct".'],
+						'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
+						'product_id' => ['type' => 'number', 'description' => 'Product ID'],
+						'quantity' => ['type' => 'number', 'description' => 'Quantity', 'default' => 1],
+						'option' => [
+							'type' => 'object', 
+							'description' => 'Product options where KEY is product_option_id (stringified number) and VALUE is product_option_value_id (number) or text value.',
+							'additionalProperties' => [
+								'type' => ['number', 'string', 'array'],
+								'description' => 'The value of the product option (product_option_value_id, text, or array of IDs for checkboxes)'
+							]
+						],						
+						'subscription_plan_id' => ['type' => 'number', 'description' => 'Subscription plan ID', 'default' => 0],
+					],
+					'required' => ['tool', 'chat_id', 'product_id']
+				]
+			];
+			
+			$data['result']['tools']['editCartProduct'] = [
+				'name' => 'editCartProduct',
+				'description' => 'Edit product in the cart',
+				'requestMethod' => 'POST',
+				'inputSchema' => [
+					'type' => 'object',
+					'properties' => [
+						'tool' => ['type' => 'string', 'const' => 'editCartProduct', 'default' => 'editCartProduct', 'description' => 'Must be exactly "editCartProduct".'],
+						'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
+						'cart_id' => ['type' => 'number', 'description' => 'Cart ID'],
+						'quantity' => ['type' => 'number', 'description' => 'Quantity']
+					],
+					'required' => ['tool', 'chat_id', 'cart_id', 'quantity']
+				]
+			];
+			
+			$data['result']['tools']['deleteCartProduct'] = [
+				'name' => 'deleteCartProduct',
+				'description' => 'Delete product from the cart',
+				'requestMethod' => 'POST',
+				'inputSchema' => [
+					'type' => 'object',
+					'properties' => [
+						'tool' => ['type' => 'string', 'const' => 'deleteCartProduct', 'default' => 'deleteCartProduct', 'description' => 'Must be exactly "deleteCartProduct".'],
+						'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
+						'cart_id' => ['type' => 'number', 'description' => 'Cart ID']
+					],
+					'required' => ['tool', 'chat_id', 'cart_id']
+				]
+			];
+			
+			$data['result']['tools']['getCartProducts'] = [
+				'name' => 'getCartProducts',
+				'description' => 'Get information about products in the cart',
+				'requestMethod' => 'POST',
+				'inputSchema' => [
+					'type' => 'object',
+					'properties' => [
+						'tool' => ['type' => 'string', 'const' => 'getCartProducts', 'default' => 'getCartProducts', 'description' => 'Must be exactly "getCartProducts".'],
+						'chat_id' => ['type' => 'string', 'description' => 'Chat ID']
+					],
+					'required' => ['tool', 'chat_id']
+				]
+			];
+							
+			$data['result']['tools']['createOrder'] = [
+				'name' => 'createOrder',
+				'description' => 'Create Order',
+				'requestMethod' => 'POST',
+				'inputSchema' => [
+					'type' => 'object',
+					'properties' => [
+						'tool' => ['type' => 'string', 'const' => 'createOrder', 'default' => 'createOrder', 'description' => 'Must be exactly "createOrder".'],
+						'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
+						'firstname' => ['type' => 'string', 'description' => 'First Name'],
+						'lastname' => ['type' => 'string', 'description' => 'Last Name'],
+						'email' => ['type' => 'string', 'description' => 'E-Mail'],
+						'telephone' => ['type' => 'string', 'description' => 'Telephone'],
+						'company' => ['type' => 'string', 'description' => 'Company'],
+						'address_1' => ['type' => 'string', 'description' => 'Address 1'],
+						'address_2' => ['type' => 'string', 'description' => 'Address 2'],
+						'city' => ['type' => 'string', 'description' => 'City'],
+						'postcode' => ['type' => 'string', 'description' => 'Postcode'],
+						'country_id' => ['type' => 'number', 'description' => 'Country ID'],
+						'zone_id' => ['type' => 'number', 'description' => 'Zone ID'],
+						'shipping_method_code' => ['type' => 'string', 'description' => 'Shipping Method Code, exactly as returned by getShippingMethods. Required whenever the cart contains a shippable product; omit only for digital-only carts.'],
+						'payment_method_code' => ['type' => 'string', 'description' => 'Payment Method Code, exactly as returned by getPaymentMethods. Some methods need extra fields — getPaymentMethods lists them in required_fields, and they become required for this call.']
+					],
+					'required' => ['tool', 'chat_id', 'payment_method_code'],
+					'allOf' => []
+				]
+			];
+			
+			foreach ($setting['payment_method'] as $payment_method) {
+				if (empty($payment_method['field'])) {
+					continue;
+				}
+		
+				$required_fields = [];
+					
+				foreach ($payment_method['field'] as $field) {
+					$data['result']['tools']['createOrder']['inputSchema']['properties'][$field['code']] = [
+						'type' => $field['type'], 
+						'description' => $field['description']
+					];
+						
+					if (!empty($field['required'])) {
+						$required_fields[] = $field['code'];
+					}
+				}
+					
+				if ($required_fields) {
+					$data['result']['tools']['createOrder']['inputSchema']['allOf'][] = [
+						'if' => [
+							'properties' => [
+								'payment_method_code' => ['const' => $payment_method['code']]
+							],
+							'required' => ['payment_method_code']
+						],
+						'then' => [
+							'required' => $required_fields
+						]
+					];
 				}
 			}
-				
-			if ($required_fields) {
-				$data['result']['tools']['createOrder']['inputSchema']['allOf'][] = [
-					'if' => [
-						'properties' => [
-							'payment_method_code' => ['const' => $payment_method['code']]
-						],
-						'required' => ['payment_method_code']
+									
+			$data['result']['tools']['getShippingMethods'] = [
+				'name' => 'getShippingMethods',
+				'description' => 'Get information about shipping methods',
+				'requestMethod' => 'POST',
+				'inputSchema' => [
+					'type' => 'object',
+					'properties' => [
+						'tool' => ['type' => 'string', 'const' => 'getShippingMethods', 'default' => 'getShippingMethods', 'description' => 'Must be exactly "getShippingMethods".'],
+						'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
+						'country_id' => ['type' => 'number', 'description' => 'Country ID'],
+						'zone_id' => ['type' => 'number', 'description' => 'Zone ID']
 					],
-					'then' => [
-						'required' => $required_fields
-					]
-				];
-			}
+					'required' => ['tool', 'chat_id', 'country_id', 'zone_id']
+				]
+			];
+			
+			$data['result']['tools']['getPaymentMethods'] = [
+				'name' => 'getPaymentMethods',
+				'description' => 'Get information about payment methods',
+				'requestMethod' => 'POST',
+				'inputSchema' => [
+					'type' => 'object',
+					'properties' => [
+						'tool' => ['type' => 'string', 'const' => 'getPaymentMethods', 'default' => 'getPaymentMethods', 'description' => 'Must be exactly "getPaymentMethods".'],
+						'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
+						'country_id' => ['type' => 'number', 'description' => 'Country ID'],
+						'zone_id' => ['type' => 'number', 'description' => 'Zone ID']
+					],
+					'required' => ['tool', 'chat_id', 'country_id', 'zone_id']
+				]
+			];
+		
+			$data['result']['tools']['getCountries'] = [
+				'name' => 'getCountries',
+				'description' => 'Get information about countries',
+				'requestMethod' => 'POST',
+				'inputSchema' => [
+					'type' => 'object',
+					'properties' => [
+						'tool' => ['type' => 'string', 'const' => 'getCountries', 'default' => 'getCountries', 'description' => 'Must be exactly "getCountries".'],
+						'chat_id' => ['type' => 'string', 'description' => 'Chat ID']
+					],
+					'required' => ['tool', 'chat_id']
+				]
+			];
+			
+			$data['result']['tools']['getZonesByCountryId'] = [
+				'name' => 'getZonesByCountryId',
+				'description' => 'Get information about zones for this country ID',
+				'requestMethod' => 'POST',
+				'inputSchema' => [
+					'type' => 'object',
+					'properties' => [
+						'tool' => ['type' => 'string', 'const' => 'getZonesByCountryId', 'default' => 'getZonesByCountryId', 'description' => 'Must be exactly "getZonesByCountryId".'],
+						'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
+						'country_id' => ['type' => 'number', 'description' => 'Country ID']
+					],
+					'required' => ['tool', 'chat_id', 'country_id']
+				]
+			];
+		} else {
+			$tools = [
+				'getCategory', 'getCategories', 'getManufacturer', 'getManufacturers',
+				'getProduct', 'getProducts', 'getCurrentCustomer', 'getCurrentCustomerOrder',
+				'getCurrentCustomerOrders', 'addCartProduct', 'editCartProduct', 'deleteCartProduct',
+				'getCartProducts', 'createOrder', 'getShippingMethods', 'getPaymentMethods',
+				'getCountries', 'getZonesByCountryId'
+			];
+
+			if (in_array($request['tool'], $tools)) {
+				$this->{$request['tool']}();
+				
+				return;
+			} 
+			
+			$this->errors[] = 'Tool not found!';
+				
+			$data = [
+				'jsonrpc' => "2.0",
+				'error' => implode(' ', $this->errors),
+				'errors' => $this->errors
+			];
+				
+			$this->response->addHeader($this->request->server['SERVER_PROTOCOL'] . ' 400 Bad Request');
+				
+			$this->model_extension_stable_module_stable->log($request, $data, $request['tool']);
 		}
-								
-		$data['result']['tools']['getShippingMethods'] = [
-			'name' => 'getShippingMethods',
-			'description' => 'Get information about shipping methods',
-			'endpoint' => $this->url->link('extension/stable/stable/frontend' . $this->separator . 'getShippingMethods', ''),
-			'requestMethod' => 'POST',
-			'inputSchema' => [
-				'type' => 'object',
-				'properties' => [
-					'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
-					'country_id' => ['type' => 'number', 'description' => 'Country ID'],
-					'zone_id' => ['type' => 'number', 'description' => 'Zone ID']
-				],
-				'required' => ['chat_id', 'country_id', 'zone_id']
-			]
-		];
-		
-		$data['result']['tools']['getPaymentMethods'] = [
-			'name' => 'getPaymentMethods',
-			'description' => 'Get information about payment methods',
-			'endpoint' => $this->url->link('extension/stable/stable/frontend' . $this->separator . 'getPaymentMethods', ''),
-			'requestMethod' => 'POST',
-			'inputSchema' => [
-				'type' => 'object',
-				'properties' => [
-					'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
-					'country_id' => ['type' => 'number', 'description' => 'Country ID'],
-					'zone_id' => ['type' => 'number', 'description' => 'Zone ID']
-				],
-				'required' => ['chat_id', 'country_id', 'zone_id']
-			]
-		];
-	
-		$data['result']['tools']['getCountries'] = [
-			'name' => 'getCountries',
-			'description' => 'Get information about countries',
-			'endpoint' => $this->url->link('extension/stable/stable/frontend' . $this->separator . 'getCountries', ''),
-			'requestMethod' => 'POST',
-			'inputSchema' => [
-				'type' => 'object',
-				'properties' => [
-					'chat_id' => ['type' => 'string', 'description' => 'Chat ID']
-				],
-				'required' => ['chat_id']
-			]
-		];
-		
-		$data['result']['tools']['getZonesByCountryId'] = [
-			'name' => 'getZonesByCountryId',
-			'description' => 'Get information about zones for this country ID',
-			'endpoint' => $this->url->link('extension/stable/stable/frontend' . $this->separator . 'getZonesByCountryId', ''),
-			'requestMethod' => 'POST',
-			'inputSchema' => [
-				'type' => 'object',
-				'properties' => [
-					'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
-					'country_id' => ['type' => 'number', 'description' => 'Country ID']
-				],
-				'required' => ['chat_id', 'country_id']
-			]
-		];
 				
 		$this->response->addHeader('Content-Type: application/json');
 		$this->response->setOutput(json_encode($data));	
 	}
 	
-	public function getCategory(): void {
+	private function getCategory(): void {
 		$this->load->model('extension/stable/module/stable');
 		$this->load->model('extension/stable/stable/frontend');
 				
@@ -447,7 +480,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		$this->response->setOutput(json_encode($data));	
 	}
 	
-	public function getCategories(): void {
+	private function getCategories(): void {
 		$this->load->model('extension/stable/module/stable');
 		$this->load->model('extension/stable/stable/frontend');
 		
@@ -551,7 +584,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		$this->response->setOutput(json_encode($data));	
 	}
 	
-	public function getManufacturer(): void {
+	private function getManufacturer(): void {
 		$this->load->model('extension/stable/module/stable');
 		$this->load->model('extension/stable/stable/frontend');
 		
@@ -615,7 +648,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		$this->response->setOutput(json_encode($data));	
 	}
 	
-	public function getManufacturers(): void {
+	private function getManufacturers(): void {
 		$this->load->model('extension/stable/module/stable');
 		$this->load->model('extension/stable/stable/frontend');
 		
@@ -712,7 +745,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		$this->response->setOutput(json_encode($data));	
 	}
 	
-	public function getProduct(): void {
+	private function getProduct(): void {
 		$this->load->model('extension/stable/module/stable');
 		$this->load->model('extension/stable/stable/frontend');
 		
@@ -776,7 +809,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		$this->response->setOutput(json_encode($data));	
 	}
 	
-	public function getProducts(): void {
+	private function getProducts(): void {
 		$this->load->model('extension/stable/module/stable');
 		$this->load->model('extension/stable/stable/frontend');
 		
@@ -936,7 +969,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		$this->response->setOutput(json_encode($data));	
 	}
 	
-	public function getCurrentCustomer(): void {
+	private function getCurrentCustomer(): void {
 		$this->load->model('extension/stable/module/stable');
 		$this->load->model('extension/stable/stable/frontend');
 		
@@ -996,7 +1029,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		$this->response->setOutput(json_encode($data));	
 	}
 	
-	public function getCurrentCustomerOrder(): void {
+	private function getCurrentCustomerOrder(): void {
 		$this->load->model('extension/stable/module/stable');
 		$this->load->model('extension/stable/stable/frontend');
 		
@@ -1060,7 +1093,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		$this->response->setOutput(json_encode($data));	
 	}
 	
-	public function getCurrentCustomerOrders(): void {
+	private function getCurrentCustomerOrders(): void {
 		$this->load->model('extension/stable/module/stable');
 		$this->load->model('extension/stable/stable/frontend');
 		
@@ -1134,7 +1167,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		$this->response->setOutput(json_encode($data));	
 	}
 				
-	public function addCartProduct(): void {
+	private function addCartProduct(): void {
 		$this->load->model('extension/stable/module/stable');
 		$this->load->model('extension/stable/stable/frontend');
 		
@@ -1242,7 +1275,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		$this->response->setOutput(json_encode($data));		
 	}
 	
-	public function editCartProduct(): void {
+	private function editCartProduct(): void {
 		$this->load->model('extension/stable/module/stable');
 		$this->load->model('extension/stable/stable/frontend');
 		
@@ -1312,7 +1345,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		$this->response->setOutput(json_encode($data));		
 	}
 	
-	public function deleteCartProduct(): void {
+	private function deleteCartProduct(): void {
 		$this->load->model('extension/stable/module/stable');
 		$this->load->model('extension/stable/stable/frontend');
 		
@@ -1376,7 +1409,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		$this->response->setOutput(json_encode($data));		
 	}
 	
-	public function getCartProducts(): void {
+	private function getCartProducts(): void {
 		$this->load->model('extension/stable/module/stable');
 		$this->load->model('extension/stable/stable/frontend');
 		
@@ -1434,7 +1467,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		$this->response->setOutput(json_encode($data));		
 	}
 	
-	public function createOrder(): void {
+	private function createOrder(): void {
 		$this->load->model('extension/stable/module/stable');
 		$this->load->model('extension/stable/stable/frontend');
 		
@@ -2201,7 +2234,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		$this->response->setOutput(json_encode($data));	
 	}
 		
-	public function getShippingMethods(): void {
+	private function getShippingMethods(): void {
 		$this->load->model('extension/stable/module/stable');
 		$this->load->model('extension/stable/stable/frontend');
 		
@@ -2297,7 +2330,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		$this->response->setOutput(json_encode($data));	
 	}	
 	
-	public function getPaymentMethods(): void {
+	private function getPaymentMethods(): void {
 		$this->load->model('extension/stable/module/stable');
 		$this->load->model('extension/stable/stable/frontend');
 		
@@ -2455,7 +2488,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		$this->response->setOutput(json_encode($data));	
 	}
 	
-	public function getCountries(): void {
+	private function getCountries(): void {
 		$this->load->model('extension/stable/module/stable');
 		$this->load->model('extension/stable/stable/frontend');
 		
@@ -2509,7 +2542,7 @@ class Frontend extends \Opencart\System\Engine\Controller {
 		$this->response->setOutput(json_encode($data));	
 	}
 	
-	public function getZonesByCountryId(): void {
+	private function getZonesByCountryId(): void {
 		$this->load->model('extension/stable/module/stable');
 		$this->load->model('extension/stable/stable/frontend');
 		

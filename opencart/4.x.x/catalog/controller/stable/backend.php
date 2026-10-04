@@ -14,275 +14,307 @@ class Backend extends \Opencart\System\Engine\Controller {
 		}
     }
 	
-	public function index(): void {
+	public function index(): void {						
+		$this->load->model('extension/stable/module/stable');
+		
 		$_config = new \Opencart\System\Engine\Config();
 		$_config->addPath(DIR_EXTENSION . 'stable/system/config/');
 		$_config->load('stable');
-		
+			
 		$config_setting = $_config->get('stable_setting');
-		
+			
 		$setting = array_replace_recursive((array)$config_setting, (array)$this->config->get('module_stable_setting'));
-						
-		$data = [
-			'jsonrpc' => '2.0',
-            'result' => [
-				'tools' => [],
-				'serverInfo' => [
-                    'name' => 'php-mcp-server',
-                    'version' => '1.0.0'
-                ]
-			]
-		];
+			
+		$request = $this->getRequestData();
 		
-		$data['result']['tools']['getCategory'] = [
-			'name' => 'getCategory',
-			'description' => 'Get information about the product category',
-			'endpoint' => $this->url->link('extension/stable/stable/backend' . $this->separator . 'getCategory', ''),
-			'requestMethod' => 'POST',
-			'inputSchema' => [
-				'type' => 'object',
-				'properties' => [
-					'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
-					'category_id' => ['type' => 'number', 'description' => 'Category ID']
-				],
-				'required' => ['chat_id', 'category_id']
-			]
-		];
+		if (empty($request['tool'])) {
+			$data = [
+				'jsonrpc' => '2.0',
+				'result' => [
+					'endpoint' => $this->url->link('extension/stable/stable/backend', ''),
+					'tools' => [],
+					'serverInfo' => [
+						'name' => 'php-mcp-server',
+						'version' => '1.0.0'
+					]
+				]
+			];
+			
+			$data['result']['tools']['getCategory'] = [
+				'name' => 'getCategory',
+				'description' => 'Get information about the product category',
+				'requestMethod' => 'POST',
+				'inputSchema' => [
+					'type' => 'object',
+					'properties' => [
+						'tool' => ['type' => 'string', 'const' => 'getCategory', 'default' => 'getCategory', 'description' => 'Must be exactly "getCategory".'],
+						'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
+						'category_id' => ['type' => 'number', 'description' => 'Category ID']
+					],
+					'required' => ['tool', 'chat_id', 'category_id']
+				]
+			];
+			
+			$data['result']['tools']['getCategories'] = [
+				'name' => 'getCategories',
+				'description' => 'Get information about product categories',
+				'requestMethod' => 'POST',
+				'inputSchema' => [
+					'type' => 'object',
+					'properties' => [
+						'tool' => ['type' => 'string', 'const' => 'getCategories', 'default' => 'getCategories', 'description' => 'Must be exactly "getCategories".'],
+						'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
+						'name' => ['type' => 'string', 'description' => 'Search categories by name'],
+						'parent_category_id' => ['type' => 'number', 'description' => 'Search categories by parent Category ID'],
+						'status' => ['type' => 'number', 'description' => 'Search categories by status (1/0)'],
+						'sort' => ['type' => 'string', 'description' => 'Sort in the category search results (name/status/sort_order)', 'default' => 'sort_order'],
+						'order' => ['type' => 'string', 'description' => 'Order in the category search results (ASC/DESC)', 'default' => 'ASC'],
+						'page' => ['type' => 'number', 'description' => 'Page number in the category search results', 'default' => 1]
+					],
+					'required' => ['tool', 'chat_id']
+				]
+			];
+			
+			$data['result']['tools']['getManufacturer'] = [
+				'name' => 'getManufacturer',
+				'description' => 'Get information about the product manufacturer',
+				'requestMethod' => 'POST',
+				'inputSchema' => [
+					'type' => 'object',
+					'properties' => [
+						'tool' => ['type' => 'string', 'const' => 'getManufacturer', 'default' => 'getManufacturer', 'description' => 'Must be exactly "getManufacturer".'],
+						'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
+						'manufacturer_id' => ['type' => 'number', 'description' => 'Manufacturer ID']
+					],
+					'required' => ['tool', 'chat_id', 'manufacturer_id']
+				]
+			];
+			
+			$data['result']['tools']['getManufacturers'] = [
+				'name' => 'getManufacturers',
+				'description' => 'Get information about product manufacturers',
+				'requestMethod' => 'POST',
+				'inputSchema' => [
+					'type' => 'object',
+					'properties' => [
+						'tool' => ['type' => 'string', 'const' => 'getManufacturers', 'default' => 'getManufacturers', 'description' => 'Must be exactly "getManufacturers".'],
+						'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
+						'name' => ['type' => 'string', 'description' => 'Search manufacturers by name'],
+						'sort' => ['type' => 'string', 'description' => 'Sort in the manufacturer search results (name/sort_order)', 'default' => 'name'],
+						'order' => ['type' => 'string', 'description' => 'Order in the manufacturer search results (ASC/DESC)', 'default' => 'ASC'],
+						'page' => ['type' => 'number', 'description' => 'Page number in the manufacturer search results', 'default' => 1]
+					],
+					'required' => ['tool', 'chat_id']
+				]
+			];
+			
+			$data['result']['tools']['getProduct'] = [
+				'name' => 'getProduct',
+				'description' => 'Get information about the product',
+				'requestMethod' => 'POST',
+				'inputSchema' => [
+					'type' => 'object',
+					'properties' => [
+						'tool' => ['type' => 'string', 'const' => 'getProduct', 'default' => 'getProduct', 'description' => 'Must be exactly "getProduct".'],
+						'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
+						'product_id' => ['type' => 'number', 'description' => 'Product ID']
+					],
+					'required' => ['tool', 'chat_id', 'product_id']
+				]
+			];
+			
+			$data['result']['tools']['getProducts'] = [
+				'name' => 'getProducts',
+				'description' => 'Get information about products',
+				'requestMethod' => 'POST',
+				'inputSchema' => [
+					'type' => 'object',
+					'properties' => [
+						'tool' => ['type' => 'string', 'const' => 'getProducts', 'default' => 'getProducts', 'description' => 'Must be exactly "getProducts".'],
+						'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
+						'name' => ['type' => 'string', 'description' => 'Search products by name'],
+						'model' => ['type' => 'string', 'description' => 'Search products by model'],
+						'price_min' => ['type' => 'number', 'description' => 'Search products with a price greater than this value'],
+						'price_max' => ['type' => 'number', 'description' => 'Search products with a price less than this value'],
+						'quantity_min' => ['type' => 'number', 'description' => 'Search products with a quantity greater than this value'],
+						'quantity_max' => ['type' => 'number', 'description' => 'Search products with a quantity less than this value'],
+						'status' => ['type' => 'number', 'description' => 'Search products by status (1/0)'],
+						'manufacturer_id' => ['type' => 'number', 'description' => 'Search products with this manufacturer ID'],
+						'category_id' => ['type' => 'number', 'description' => 'Search products in the category with this ID'],
+						'date_added_from' => ['type' => 'string', 'format' => 'date', 'description' => 'Search products by date added, starting from this date (Format: YYYY-MM-DD)'],
+						'date_added_to' => ['type' => 'string', 'format' => 'date', 'description' => 'Search products by date added, ending with this date (Format: YYYY-MM-DD)'],
+						'sort' => ['type' => 'string', 'description' => 'Sort in the product search results (name/model/price/quantity/status/sort_order/date_added/manufacturer/rating)', 'default' => 'sort_order'],
+						'order' => ['type' => 'string', 'description' => 'Order in the product search results (ASC/DESC)', 'default' => 'ASC'],
+						'page' => ['type' => 'number', 'description' => 'Page number in the product search results', 'default' => 1]
+					],
+					'required' => ['tool', 'chat_id']
+				]
+			];
+			
+			$data['result']['tools']['getCustomer'] = [
+				'name' => 'getCustomer',
+				'description' => 'Get information about the customer',
+				'requestMethod' => 'POST',
+				'inputSchema' => [
+					'type' => 'object',
+					'properties' => [
+						'tool' => ['type' => 'string', 'const' => 'getCustomer', 'default' => 'getCustomer', 'description' => 'Must be exactly "getCustomer".'],
+						'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
+						'customer_id' => ['type' => 'number', 'description' => 'Customer ID']
+					],
+					'required' => ['tool', 'chat_id', 'customer_id']
+				]
+			];
+			
+			$data['result']['tools']['getCustomers'] = [
+				'name' => 'getCustomers',
+				'description' => 'Get information about customers',
+				'requestMethod' => 'POST',
+				'inputSchema' => [
+					'type' => 'object',
+					'properties' => [
+						'tool' => ['type' => 'string', 'const' => 'getCustomers', 'default' => 'getCustomers', 'description' => 'Must be exactly "getCustomers".'],
+						'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
+						'name' => ['type' => 'string', 'description' => 'Search customers by name'],
+						'email' => ['type' => 'string', 'description' => 'Search customers by e-mail'],
+						'customer_group_id' => ['type' => 'number', 'description' => 'Search customers by customer group ID'],
+						'status' => ['type' => 'number', 'description' => 'Search customers by status (1/0)'],
+						'date_added_from' => ['type' => 'string', 'format' => 'date', 'description' => 'Search customers by date added, starting from this date (Format: YYYY-MM-DD)'],
+						'date_added_to' => ['type' => 'string', 'format' => 'date', 'description' => 'Search customers by date added, ending with this date (Format: YYYY-MM-DD)'],
+						'sort' => ['type' => 'string', 'description' => 'Sort in the customer search results (name/email/customer_group/status/date_added)', 'default' => 'name'],
+						'order' => ['type' => 'string', 'description' => 'Order in the customer search results (ASC/DESC)', 'default' => 'ASC'],
+						'page' => ['type' => 'number', 'description' => 'Page number in the customer search results', 'default' => 1]
+					],
+					'required' => ['tool', 'chat_id']
+				]
+			];
+			
+			$data['result']['tools']['getCustomerGroups'] = [
+				'name' => 'getCustomerGroups',
+				'description' => 'Get information about customer groups',
+				'requestMethod' => 'POST',
+				'inputSchema' => [
+					'type' => 'object',
+					'properties' => [
+						'tool' => ['type' => 'string', 'const' => 'getCustomerGroups', 'default' => 'getCustomerGroups', 'description' => 'Must be exactly "getCustomerGroups".'],
+						'chat_id' => ['type' => 'string', 'description' => 'Chat ID']
+					],
+					'required' => ['tool', 'chat_id']
+				]
+			];			
 		
-		$data['result']['tools']['getCategories'] = [
-			'name' => 'getCategories',
-			'description' => 'Get information about product categories',
-			'endpoint' => $this->url->link('extension/stable/stable/backend' . $this->separator . 'getCategories', ''),
-			'requestMethod' => 'POST',
-			'inputSchema' => [
-				'type' => 'object',
-				'properties' => [
-					'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
-					'name' => ['type' => 'string', 'description' => 'Search categories by name'],
-					'parent_category_id' => ['type' => 'number', 'description' => 'Search categories by parent Category ID'],
-					'status' => ['type' => 'number', 'description' => 'Search categories by status (1/0)'],
-					'sort' => ['type' => 'string', 'description' => 'Sort in the category search results (name/status/sort_order)', 'default' => 'sort_order'],
-					'order' => ['type' => 'string', 'description' => 'Order in the category search results (ASC/DESC)', 'default' => 'ASC'],
-					'page' => ['type' => 'number', 'description' => 'Page number in the category search results', 'default' => 1]
-				],
-				'required' => ['chat_id']
-			]
-		];
-		
-		$data['result']['tools']['getManufacturer'] = [
-			'name' => 'getManufacturer',
-			'description' => 'Get information about the product manufacturer',
-			'endpoint' => $this->url->link('extension/stable/stable/backend' . $this->separator . 'getManufacturer', ''),
-			'requestMethod' => 'POST',
-			'inputSchema' => [
-				'type' => 'object',
-				'properties' => [
-					'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
-					'manufacturer_id' => ['type' => 'number', 'description' => 'Manufacturer ID']
-				],
-				'required' => ['chat_id', 'manufacturer_id']
-			]
-		];
-		
-		$data['result']['tools']['getManufacturers'] = [
-			'name' => 'getManufacturers',
-			'description' => 'Get information about product manufacturers',
-			'endpoint' => $this->url->link('extension/stable/stable/backend' . $this->separator . 'getManufacturers', ''),
-			'requestMethod' => 'POST',
-			'inputSchema' => [
-				'type' => 'object',
-				'properties' => [
-					'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
-					'name' => ['type' => 'string', 'description' => 'Search manufacturers by name'],
-					'sort' => ['type' => 'string', 'description' => 'Sort in the manufacturer search results (name/sort_order)', 'default' => 'name'],
-					'order' => ['type' => 'string', 'description' => 'Order in the manufacturer search results (ASC/DESC)', 'default' => 'ASC'],
-					'page' => ['type' => 'number', 'description' => 'Page number in the manufacturer search results', 'default' => 1]
-				],
-				'required' => ['chat_id']
-			]
-		];
-		
-		$data['result']['tools']['getProduct'] = [
-			'name' => 'getProduct',
-			'description' => 'Get information about the product',
-			'endpoint' => $this->url->link('extension/stable/stable/backend' . $this->separator . 'getProduct', ''),
-			'requestMethod' => 'POST',
-			'inputSchema' => [
-				'type' => 'object',
-				'properties' => [
-					'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
-					'product_id' => ['type' => 'number', 'description' => 'Product ID']
-				],
-				'required' => ['chat_id', 'product_id']
-			]
-		];
-		
-		$data['result']['tools']['getProducts'] = [
-			'name' => 'getProducts',
-			'description' => 'Get information about products',
-			'endpoint' =>$this->url->link('extension/stable/stable/backend' . $this->separator . 'getProducts', ''),
-			'requestMethod' => 'POST',
-			'inputSchema' => [
-				'type' => 'object',
-				'properties' => [
-					'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
-					'name' => ['type' => 'string', 'description' => 'Search products by name'],
-					'model' => ['type' => 'string', 'description' => 'Search products by model'],
-					'price_min' => ['type' => 'number', 'description' => 'Search products with a price greater than this value'],
-					'price_max' => ['type' => 'number', 'description' => 'Search products with a price less than this value'],
-					'quantity_min' => ['type' => 'number', 'description' => 'Search products with a quantity greater than this value'],
-					'quantity_max' => ['type' => 'number', 'description' => 'Search products with a quantity less than this value'],
-					'status' => ['type' => 'number', 'description' => 'Search products by status (1/0)'],
-					'manufacturer_id' => ['type' => 'number', 'description' => 'Search products with this manufacturer ID'],
-					'category_id' => ['type' => 'number', 'description' => 'Search products in the category with this ID'],
-					'date_added_from' => ['type' => 'string', 'format' => 'date', 'description' => 'Search products by date added, starting from this date (Format: YYYY-MM-DD)'],
-					'date_added_to' => ['type' => 'string', 'format' => 'date', 'description' => 'Search products by date added, ending with this date (Format: YYYY-MM-DD)'],
-					'sort' => ['type' => 'string', 'description' => 'Sort in the product search results (name/model/price/quantity/status/sort_order/date_added/manufacturer/rating)', 'default' => 'sort_order'],
-					'order' => ['type' => 'string', 'description' => 'Order in the product search results (ASC/DESC)', 'default' => 'ASC'],
-					'page' => ['type' => 'number', 'description' => 'Page number in the product search results', 'default' => 1]
-				],
-				'required' => ['chat_id']
-			]
-		];
-		
-		$data['result']['tools']['getCustomer'] = [
-			'name' => 'getCustomer',
-			'description' => 'Get information about the customer',
-			'endpoint' => $this->url->link('extension/stable/stable/backend' . $this->separator . 'getCustomer', ''),
-			'requestMethod' => 'POST',
-			'inputSchema' => [
-				'type' => 'object',
-				'properties' => [
-					'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
-					'customer_id' => ['type' => 'number', 'description' => 'Customer ID']
-				],
-				'required' => ['chat_id', 'customer_id']
-			]
-		];
-		
-		$data['result']['tools']['getCustomers'] = [
-			'name' => 'getCustomers',
-			'description' => 'Get information about customers',
-			'endpoint' => $this->url->link('extension/stable/stable/backend' . $this->separator . 'getCustomers', ''),
-			'requestMethod' => 'POST',
-			'inputSchema' => [
-				'type' => 'object',
-				'properties' => [
-					'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
-					'name' => ['type' => 'string', 'description' => 'Search customers by name'],
-					'email' => ['type' => 'string', 'description' => 'Search customers by e-mail'],
-					'customer_group_id' => ['type' => 'number', 'description' => 'Search customers by customer group ID'],
-					'status' => ['type' => 'number', 'description' => 'Search customers by status (1/0)'],
-					'date_added_from' => ['type' => 'string', 'format' => 'date', 'description' => 'Search customers by date added, starting from this date (Format: YYYY-MM-DD)'],
-					'date_added_to' => ['type' => 'string', 'format' => 'date', 'description' => 'Search customers by date added, ending with this date (Format: YYYY-MM-DD)'],
-					'sort' => ['type' => 'string', 'description' => 'Sort in the customer search results (name/email/customer_group/status/date_added)', 'default' => 'name'],
-					'order' => ['type' => 'string', 'description' => 'Order in the customer search results (ASC/DESC)', 'default' => 'ASC'],
-					'page' => ['type' => 'number', 'description' => 'Page number in the customer search results', 'default' => 1]
-				],
-				'required' => ['chat_id']
-			]
-		];
-		
-		$data['result']['tools']['getCustomerGroups'] = [
-			'name' => 'getCustomerGroups',
-			'description' => 'Get information about customer groups',
-			'endpoint' => $this->url->link('extension/stable/stable/backend' . $this->separator . 'getCustomerGroups', ''),
-			'requestMethod' => 'POST',
-			'inputSchema' => [
-				'type' => 'object',
-				'properties' => [
-					'chat_id' => ['type' => 'string', 'description' => 'Chat ID']
-				],
-				'required' => ['chat_id']
-			]
-		];			
-	
-		$data['result']['tools']['getOrder'] = [
-			'name' => 'getOrder',
-			'description' => 'Get information about the order',
-			'endpoint' => $this->url->link('extension/stable/stable/backend' . $this->separator . 'getOrder', ''),
-			'requestMethod' => 'POST',
-			'inputSchema' => [
-				'type' => 'object',
-				'properties' => [
-					'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
-					'order_id' => ['type' => 'number', 'description' => 'Order ID']
-				],
-				'required' => ['chat_id', 'order_id']
-			]
-		];
-		
-		$data['result']['tools']['getOrders'] = [
-			'name' => 'getOrders',
-			'description' => 'Get information about orders',
-			'endpoint' => $this->url->link('extension/stable/stable/backend' . $this->separator . 'getOrders', ''),
-			'requestMethod' => 'POST',
-			'inputSchema' => [
-				'type' => 'object',
-				'properties' => [
-					'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
-					'customer_name' => ['type' => 'string', 'description' => 'Search orders by customer name'],
-					'order_status_id' => ['type' => 'number', 'description' => 'Search orders by order status ID'],
-					'total_min' => ['type' => 'number', 'description' => 'Search orders with a total greater than this value'],
-					'total_max' => ['type' => 'number', 'description' => 'Search orders with a total less than this value'],
-					'date_added_from' => ['type' => 'string', 'format' => 'date', 'description' => 'Search orders by date added, starting from this date (Format: YYYY-MM-DD)'],
-					'date_added_to' => ['type' => 'string', 'format' => 'date', 'description' => 'Search orders by date added, ending with this date (Format: YYYY-MM-DD)'],
-					'sort' => ['type' => 'string', 'description' => 'Sort in the order search results (order_id/customer_name/order_status/total/date_added)', 'default' => 'order_id'],
-					'order' => ['type' => 'string', 'description' => 'Order in the order search results (ASC/DESC)', 'default' => 'DESC'],
-					'page' => ['type' => 'number', 'description' => 'Page number in the order search results', 'default' => 1]
-				],
-				'required' => ['chat_id']
-			]
-		];
+			$data['result']['tools']['getOrder'] = [
+				'name' => 'getOrder',
+				'description' => 'Get information about the order',
+				'requestMethod' => 'POST',
+				'inputSchema' => [
+					'type' => 'object',
+					'properties' => [
+						'tool' => ['type' => 'string', 'const' => 'getOrder', 'default' => 'getOrder', 'description' => 'Must be exactly "getOrder".'],
+						'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
+						'order_id' => ['type' => 'number', 'description' => 'Order ID']
+					],
+					'required' => ['tool', 'chat_id', 'order_id']
+				]
+			];
+			
+			$data['result']['tools']['getOrders'] = [
+				'name' => 'getOrders',
+				'description' => 'Get information about orders',
+				'requestMethod' => 'POST',
+				'inputSchema' => [
+					'type' => 'object',
+					'properties' => [
+						'tool' => ['type' => 'string', 'const' => 'getOrders', 'default' => 'getOrders', 'description' => 'Must be exactly "getOrders".'],
+						'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
+						'customer_name' => ['type' => 'string', 'description' => 'Search orders by customer name'],
+						'order_status_id' => ['type' => 'number', 'description' => 'Search orders by order status ID'],
+						'total_min' => ['type' => 'number', 'description' => 'Search orders with a total greater than this value'],
+						'total_max' => ['type' => 'number', 'description' => 'Search orders with a total less than this value'],
+						'date_added_from' => ['type' => 'string', 'format' => 'date', 'description' => 'Search orders by date added, starting from this date (Format: YYYY-MM-DD)'],
+						'date_added_to' => ['type' => 'string', 'format' => 'date', 'description' => 'Search orders by date added, ending with this date (Format: YYYY-MM-DD)'],
+						'sort' => ['type' => 'string', 'description' => 'Sort in the order search results (order_id/customer_name/order_status/total/date_added)', 'default' => 'order_id'],
+						'order' => ['type' => 'string', 'description' => 'Order in the order search results (ASC/DESC)', 'default' => 'DESC'],
+						'page' => ['type' => 'number', 'description' => 'Page number in the order search results', 'default' => 1]
+					],
+					'required' => ['tool', 'chat_id']
+				]
+			];
 
-		$data['result']['tools']['getOrderStatuses'] = [
-			'name' => 'getOrderStatuses',
-			'description' => 'Get information about order statuses',
-			'endpoint' => $this->url->link('extension/stable/stable/backend' . $this->separator . 'getOrderStatuses', ''),
-			'requestMethod' => 'POST',
-			'inputSchema' => [
-				'type' => 'object',
-				'properties' => [
-					'chat_id' => ['type' => 'string', 'description' => 'Chat ID']
-				],
-				'required' => ['chat_id']
-			]
-		];
-	
-		$data['result']['tools']['getCountries'] = [
-			'name' => 'getCountries',
-			'description' => 'Get information about countries',
-			'endpoint' => $this->url->link('extension/stable/stable/backend' . $this->separator . 'getCountries', ''),
-			'requestMethod' => 'POST',
-			'inputSchema' => [
-				'type' => 'object',
-				'properties' => [
-					'chat_id' => ['type' => 'string', 'description' => 'Chat ID']
-				],
-				'required' => ['chat_id']
-			]
-		];
+			$data['result']['tools']['getOrderStatuses'] = [
+				'name' => 'getOrderStatuses',
+				'description' => 'Get information about order statuses',
+				'requestMethod' => 'POST',
+				'inputSchema' => [
+					'type' => 'object',
+					'properties' => [
+						'tool' => ['type' => 'string', 'const' => 'getOrderStatuses', 'default' => 'getOrderStatuses', 'description' => 'Must be exactly "getOrderStatuses".'],
+						'chat_id' => ['type' => 'string', 'description' => 'Chat ID']
+					],
+					'required' => ['tool', 'chat_id']
+				]
+			];
 		
-		$data['result']['tools']['getZonesByCountryId'] = [
-			'name' => 'getZonesByCountryId',
-			'description' => 'Get information about zones for this country ID',
-			'endpoint' => $this->url->link('extension/stable/stable/backend' . $this->separator . 'getZonesByCountryId', ''),
-			'requestMethod' => 'POST',
-			'inputSchema' => [
-				'type' => 'object',
-				'properties' => [
-					'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
-					'country_id' => ['type' => 'number', 'description' => 'Country ID']
-				],
-				'required' => ['chat_id', 'country_id']
-			]
-		];
+			$data['result']['tools']['getCountries'] = [
+				'name' => 'getCountries',
+				'description' => 'Get information about countries',
+				'requestMethod' => 'POST',
+				'inputSchema' => [
+					'type' => 'object',
+					'properties' => [
+						'tool' => ['type' => 'string', 'const' => 'getCountries', 'default' => 'getCountries', 'description' => 'Must be exactly "getCountries".'],
+						'chat_id' => ['type' => 'string', 'description' => 'Chat ID']
+					],
+					'required' => ['tool', 'chat_id']
+				]
+			];
+			
+			$data['result']['tools']['getZonesByCountryId'] = [
+				'name' => 'getZonesByCountryId',
+				'description' => 'Get information about zones for this country ID',
+				'requestMethod' => 'POST',
+				'inputSchema' => [
+					'type' => 'object',
+					'properties' => [
+						'tool' => ['type' => 'string', 'const' => 'getZonesByCountryId', 'default' => 'getZonesByCountryId', 'description' => 'Must be exactly "getZonesByCountryId".'],
+						'chat_id' => ['type' => 'string', 'description' => 'Chat ID'],
+						'country_id' => ['type' => 'number', 'description' => 'Country ID']
+					],
+					'required' => ['tool', 'chat_id', 'country_id']
+				]
+			];
+		} else {
+			$tools = [
+				'getCategory', 'getCategories', 'getManufacturer', 'getManufacturers',
+				'getProduct', 'getProducts', 'getCustomer', 'getCustomers',
+				'getCustomerGroups', 'getOrder', 'getOrders', 'getOrderStatuses',
+				'getCountries', 'getZonesByCountryId'
+			];
+
+			if (in_array($request['tool'], $tools)) {
+				$this->{$request['tool']}();
+				
+				return;
+			} 
+			
+			$this->errors[] = 'Tool not found!';
+				
+			$data = [
+				'jsonrpc' => "2.0",
+				'error' => implode(' ', $this->errors),
+				'errors' => $this->errors
+			];
+				
+			$this->response->addHeader($this->request->server['SERVER_PROTOCOL'] . ' 400 Bad Request');
+				
+			$this->model_extension_stable_module_stable->log($request, $data, $request['tool']);
+		}
 				
 		$this->response->addHeader('Content-Type: application/json');
 		$this->response->setOutput(json_encode($data));	
 	}
 	
-	public function getCategory(): void {
+	private function getCategory(): void {
 		$this->load->model('extension/stable/module/stable');
 		$this->load->model('extension/stable/stable/backend');
 		
@@ -346,7 +378,7 @@ class Backend extends \Opencart\System\Engine\Controller {
 		$this->response->setOutput(json_encode($data));	
 	}
 	
-	public function getCategories(): void {
+	private function getCategories(): void {
 		$this->load->model('extension/stable/module/stable');
 		$this->load->model('extension/stable/stable/backend');
 		
@@ -456,7 +488,7 @@ class Backend extends \Opencart\System\Engine\Controller {
 		$this->response->setOutput(json_encode($data));	
 	}
 	
-	public function getManufacturer(): void {
+	private function getManufacturer(): void {
 		$this->load->model('extension/stable/module/stable');
 		$this->load->model('extension/stable/stable/backend');
 		
@@ -520,7 +552,7 @@ class Backend extends \Opencart\System\Engine\Controller {
 		$this->response->setOutput(json_encode($data));	
 	}
 	
-	public function getManufacturers(): void {
+	private function getManufacturers(): void {
 		$this->load->model('extension/stable/module/stable');
 		$this->load->model('extension/stable/stable/backend');
 		
@@ -617,7 +649,7 @@ class Backend extends \Opencart\System\Engine\Controller {
 		$this->response->setOutput(json_encode($data));	
 	}
 	
-	public function getProduct(): void {
+	private function getProduct(): void {
 		$this->load->model('extension/stable/module/stable');
 		$this->load->model('extension/stable/stable/backend');
 		
@@ -681,7 +713,7 @@ class Backend extends \Opencart\System\Engine\Controller {
 		$this->response->setOutput(json_encode($data));	
 	}
 	
-	public function getProducts(): void {
+	private function getProducts(): void {
 		$this->load->model('extension/stable/module/stable');
 		$this->load->model('extension/stable/stable/backend');
 		
@@ -848,7 +880,7 @@ class Backend extends \Opencart\System\Engine\Controller {
 		$this->response->setOutput(json_encode($data));	
 	}
 		
-	public function getCustomer(): void {
+	private function getCustomer(): void {
 		$this->load->model('extension/stable/module/stable');
 		$this->load->model('extension/stable/stable/backend');
 		
@@ -912,7 +944,7 @@ class Backend extends \Opencart\System\Engine\Controller {
 		$this->response->setOutput(json_encode($data));	
 	}
 	
-	public function getCustomers(): void {
+	private function getCustomers(): void {
 		$this->load->model('extension/stable/module/stable');
 		$this->load->model('extension/stable/stable/backend');
 		
@@ -1044,7 +1076,7 @@ class Backend extends \Opencart\System\Engine\Controller {
 		$this->response->setOutput(json_encode($data));	
 	}
 	
-	public function getCustomerGroups(): void {
+	private function getCustomerGroups(): void {
 		$this->load->model('extension/stable/module/stable');
 		$this->load->model('extension/stable/stable/backend');
 		
@@ -1102,7 +1134,7 @@ class Backend extends \Opencart\System\Engine\Controller {
 		$this->response->setOutput(json_encode($data));	
 	}
 	
-	public function getOrder(): void {
+	private function getOrder(): void {
 		$this->load->model('extension/stable/module/stable');
 		$this->load->model('extension/stable/stable/backend');
 		
@@ -1166,7 +1198,7 @@ class Backend extends \Opencart\System\Engine\Controller {
 		$this->response->setOutput(json_encode($data));	
 	}
 	
-	public function getOrders(): void {
+	private function getOrders(): void {
 		$this->load->model('extension/stable/module/stable');
 		$this->load->model('extension/stable/stable/backend');
 		
@@ -1298,7 +1330,7 @@ class Backend extends \Opencart\System\Engine\Controller {
 		$this->response->setOutput(json_encode($data));	
 	}
 	
-	public function getOrderStatuses(): void {
+	private function getOrderStatuses(): void {
 		$this->load->model('extension/stable/module/stable');
 		$this->load->model('extension/stable/stable/backend');
 		
@@ -1356,7 +1388,7 @@ class Backend extends \Opencart\System\Engine\Controller {
 		$this->response->setOutput(json_encode($data));	
 	}
 				
-	public function getCountries(): void {
+	private function getCountries(): void {
 		$this->load->model('extension/stable/module/stable');
 		$this->load->model('extension/stable/stable/backend');
 		
@@ -1410,7 +1442,7 @@ class Backend extends \Opencart\System\Engine\Controller {
 		$this->response->setOutput(json_encode($data));	
 	}
 	
-	public function getZonesByCountryId(): void {
+	private function getZonesByCountryId(): void {
 		$this->load->model('extension/stable/module/stable');
 		$this->load->model('extension/stable/stable/backend');
 		

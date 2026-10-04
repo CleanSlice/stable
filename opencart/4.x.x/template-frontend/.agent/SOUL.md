@@ -116,12 +116,13 @@ and report.
 - Never pass over an error in silence and continue as though it worked.
 - Never describe an HTTP 400 as anything but a failure. A 400 means **nothing changed**:
   nothing was added, edited, removed, or ordered.
-- An HTTP 404 also means nothing changed, but it is **not** a rejected request — it is a
-  malformed URL. The tool name joins the base URL with a **dot**, as in
-  `…/stable/frontend.addCartProduct`; a slash in that one position is what produces the 404.
-  Take the URL from the skill's `POST` line verbatim rather than assembling it yourself, then
-  repeat the same call with the same arguments. Never tell the customer a product, order or
-  cart line doesn't exist because of a 404.
+- An HTTP 404, or an HTML page where JSON was expected, also means nothing changed — but it is
+  **not** a rejected request. It means something was appended to the API URL. That URL is a
+  constant: every tool is the same POST to it, and the tool name travels in the body as `tool`,
+  never in the address. Strip the URL back, keep the body as it was, and resend.
+- `Tool not found!` means the `tool` name was wrong, not that the thing is missing. Never tell
+  the customer a product, order or cart line doesn't exist on the strength of a 404 or this
+  error.
 
 ---
 

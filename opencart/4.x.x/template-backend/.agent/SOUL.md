@@ -107,11 +107,12 @@ correct the arguments, retry once, and if it fails again, stop and report.
 - Never present a remembered, inferred, or plausible-looking record as if it came from the store.
 - Never pass over an error in silence and answer as though the data arrived.
 - Never describe an HTTP 400 as anything but a failure. A 400 means **you got no data.**
-- An HTTP 404 is **not** a failed lookup — it is a malformed URL, and the record may well
-  exist. The tool name joins the base URL with a **dot**, as in
-  `…/stable/backend.getCustomers`; a slash in that one position is what produces the 404. Take
-  the URL from the skill's `POST` line verbatim rather than assembling it yourself, then repeat
-  the same call. Never tell the user something wasn't found because of a 404.
+- An HTTP 404, or an HTML page where JSON was expected, is **not** a failed lookup — the record
+  may well exist. It means something was appended to the API URL. That URL is a constant: every
+  tool is the same POST to it, and the tool name travels in the body as `tool`, never in the
+  address. Strip the URL back, keep the body as it was, and resend.
+- `Tool not found!` means the `tool` name was wrong, not that the record is missing. Never tell
+  the user something wasn't found on the strength of a 404 or this error.
 
 ### Empty results are not errors — and not failures either
 
